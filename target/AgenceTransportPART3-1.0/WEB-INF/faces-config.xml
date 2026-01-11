@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<faces-config
+    xmlns="https://jakarta.ee/xml/ns/jakartaee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-facesconfig_4_0.xsd"
+    version="4.0">
+
+    <navigation-rule>
+        <!-- Navigation vers home -->
+        <navigation-case>
+            <from-outcome>home</from-outcome>
+            <to-view-id>/index.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+
+        <!-- Navigation vers rapport -->
+        <navigation-case>
+            <from-outcome>report</from-outcome>
+            <to-view-id>/reports.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>reports</from-outcome>
+            <to-view-id>/reports.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+
+        <!-- Navigation vers reservation -->
+        <navigation-case>
+            <from-outcome>reservation</from-outcome>
+            <to-view-id>/reservations.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>reservations</from-outcome>
+            <to-view-id>/reservations.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        
+        <!-- Navigation vers trajet -->
+        <navigation-case>
+            <from-outcome>trajet</from-outcome>
+            <to-view-id>/trajets.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>trajets</from-outcome>
+            <to-view-id>/trajets.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+    </navigation-rule>
+
+</faces-config>

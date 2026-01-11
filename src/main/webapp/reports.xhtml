@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="jakarta.faces.html" xmlns:f="jakarta.faces.core"
+    xmlns:ui="jakarta.faces.facelets" xmlns:c="jakarta.tags.core">
+<ui:composition template="template.xhtml">
+    <ui:define name="title">Rapports</ui:define>
+    <ui:define name="css">
+        <style>
+            .stats {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 1rem;
+                margin-bottom: 2rem;
+            }
+
+            .stat-card {
+                background: white;
+                padding: 1.5rem;
+                border-radius: 10px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                text-align: center;
+            }
+
+            .stat-card h3 {
+                color: #667eea;
+                font-size: 2rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .stat-card p {
+                color: #718096;
+                font-size: 0.875rem;
+            }
+        </style>
+    </ui:define>
+    <ui:define name="content">
+        <div class="card">
+            <h2>📊 Rapports et Statistiques</h2>
+        </div>
+
+        <!-- Summary Report -->
+        <div class="stats">
+            <!-- Reservations Summary -->
+            <div class="stat-card">
+                <p>Réservations Totales</p>
+                <h3>#{reportBean.summaryReport['reservations']['total']}</h3>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <span class="badge badge-warning">En attente:
+                        #{reportBean.summaryReport['reservations']['pending']}</span>
+                    <span class="badge badge-success">Confirmées:
+                        #{reportBean.summaryReport['reservations']['confirmed']}</span>
+                </div>
+            </div>
+
+            <!-- Trajets Summary -->
+            <div class="stat-card">
+                <p>Trajets Totaux</p>
+                <h3>#{reportBean.summaryReport['trajets']['total']}</h3>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <span class="badge badge-info">Planifiés: #{reportBean.summaryReport['trajets']['planned']}</span>
+                    <span class="badge badge-success">Terminés:
+                        #{reportBean.summaryReport['trajets']['completed']}</span>
+                </div>
+            </div>
+
+            <!-- Quick Action -->
+            <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h4 style="margin-bottom: 0.5rem;">Gestion Active</h4>
+                <p style="color: rgba(255,255,255,0.8); margin-bottom: 1rem;">Optimisez vos opérations.</p>
+                <h:link outcome="trajets" styleClass="btn btn-sm btn-secondary"
+                    style="background: white !important; color: #667eea !important;">
+                    Planifier un trajet
+                </h:link>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Report by Bus -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <h2>Rapport par Bus</h2>
+                    <div class="table-container">
+                        <h:dataTable value="#{reportBean.reportByBus.entrySet().toArray()}" var="entry"
+                            styleClass="w-100">
+                            <h:column>
+                                <div style="padding: 1rem; border-bottom: 1px solid #f0f0f0;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                        <h4 style="color: #667eea; margin: 0;">Bus ##{entry.key}</h4>
+                                        <span class="badge badge-info">#{entry.value.size()} trajets</span>
+                                    </div>
+                                    <ui:repeat value="#{entry.value}" var="trajet">
+                                        <div class="detail-item" style="border: none; padding: 5px 0;">
+                                            <span style="font-size: 0.875rem; color: #718096;">##{trajet.id} :
+                                                #{trajet.departureLocation} → #{trajet.destinationLocation}</span>
+                                        </div>
+                                    </ui:repeat>
+                                </div>
+                            </h:column>
+                        </h:dataTable>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report by Chauffeur -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <h2>Rapport par Chauffeur</h2>
+                    <div class="table-container">
+                        <h:dataTable value="#{reportBean.reportByChauffeur.entrySet().toArray()}" var="entry"
+                            styleClass="w-100">
+                            <h:column>
+                                <div style="padding: 1rem; border-bottom: 1px solid #f0f0f0;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                        <h4 style="color: #667eea; margin: 0;">Chauffeur ##{entry.key}</h4>
+                                        <span class="badge badge-info">#{entry.value.size()} trajets</span>
+                                    </div>
+                                    <ui:repeat value="#{entry.value}" var="trajet">
+                                        <div class="detail-item" style="border: none; padding: 5px 0;">
+                                            <span style="font-size: 0.875rem; color: #718096;">##{trajet.id} :
+                                                #{trajet.departureLocation} → #{trajet.destinationLocation}</span>
+                                        </div>
+                                    </ui:repeat>
+                                </div>
+                            </h:column>
+                        </h:dataTable>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reservations with Trajets Associated -->
+        <div class="card">
+            <h2>Réservations avec Trajets Associés</h2>
+            <div class="table-container">
+                <h:dataTable value="#{reportBean.reservationsWithTrajets.entrySet().toArray()}" var="entry"
+                    styleClass="w-100">
+                    <h:column>
+                        <div class="detail-item" style="padding: 1rem 0;">
+                            <div style="flex: 1;">
+                                <div class="fw-bold">##{entry.key.id} - #{entry.key.passengerName}</div>
+                                <small style="color: #718096;">#{entry.key.departureLocation} →
+                                    #{entry.key.destinationLocation}</small>
+                            </div>
+                            <div style="flex: 1; text-align: center;">
+                                <c:choose>
+                                    <c:when test="#{entry.value != null}">
+                                        <span class="badge badge-info">Trajet ##{entry.value.id}</span>
+                                        <div style="font-size: 0.75rem; color: #718096;">
+                                            Bus: #{entry.value.busNumber} | Chauffeur: #{entry.value.chauffeurName}
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span style="color: #cbd5e0; font-style: italic;">Pas de trajet assigné</span>
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
+                            <div style="flex: 1; text-align: right;">
+                                <span class="badge #{entry.key.status == 'PENDING' ? 'badge-warning' : 
+                                                  entry.key.status == 'CONFIRMED' ? 'badge-success' : 
+                                                  entry.key.status == 'CANCELLED' ? 'badge-danger' : 'badge-info'}">
+                                    #{entry.key.status}
+                                </span>
+                            </div>
+                        </div>
+                    </h:column>
+                </h:dataTable>
+            </div>
+        </div>
+    </ui:define>
+</ui:composition>
+
+</html>
