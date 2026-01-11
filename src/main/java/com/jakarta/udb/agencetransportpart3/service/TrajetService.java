@@ -154,7 +154,7 @@ public class TrajetService {
      */
     public Trajet findByReservationId(Long reservationId) {
         return findAll().stream()
-                .filter(t -> t.getReservationId().equals(reservationId))
+                .filter(t -> t.getReservationId() != null && t.getReservationId().equals(reservationId))
                 .findFirst()
                 .orElse(null);
     }

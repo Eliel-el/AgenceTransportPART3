@@ -2,77 +2,183 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="jakarta.faces.html" xmlns:ui="jakarta.faces.facelets">
 <ui:composition template="template.xhtml">
     <ui:define name="title">Accueil - Agence Transport</ui:define>
-    <ui:define name="css">
-        <style>
-            .hero-section {
-                text-align: center;
-                padding: 3rem 0;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                border-radius: 15px;
-                color: white;
-                margin-bottom: 2rem;
-                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            }
-
-            .cards {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                gap: 2rem;
-                margin-bottom: 3rem;
-            }
-
-            .feature-icon {
-                font-size: 3rem;
-                margin-bottom: 1rem;
-            }
-        </style>
-    </ui:define>
 
     <ui:define name="content">
-        <div class="hero-section">
-            <h1>Bienvenue 🚍</h1>
-            <p>Système de gestion des réservations et trajets de transport</p>
-        </div>
-
-        <div class="cards">
-            <div class="card text-center">
-                <div class="feature-icon">📋</div>
-                <h3>Réservations</h3>
-                <p>Enregistrez et gérez les réservations des clients.</p>
-                <h:link value="Accéder" outcome="reservations" styleClass="btn btn-primary rounded-pill px-4" />
-            </div>
-
-            <div class="card text-center">
-                <div class="feature-icon">🚍</div>
-                <h3>Trajets</h3>
-                <p>Organisez les trajets avec bus et chauffeurs.</p>
-                <h:link value="Organiser" outcome="trajets" styleClass="btn btn-primary rounded-pill px-4" />
-            </div>
-
-            <div class="card text-center">
-                <div class="feature-icon">📊</div>
-                <h3>Rapports</h3>
-                <p>Consultez les statistiques et rapports détaillés.</p>
-                <h:link value="Consulter" outcome="reports" styleClass="btn btn-primary rounded-pill px-4" />
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>Fonctionnalités principales</h2>
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">✅ Enregistrement des réservations</li>
-                        <li class="list-group-item">✅ Vérification disponibilité des bus</li>
-                        <li class="list-group-item">✅ Vérification disponibilité des chauffeurs</li>
-                    </ul>
+        <!-- Hero Section -->
+        <div class="card border-0 shadow-lg mb-4 overflow-hidden"
+            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div class="text-center py-5">
+                <div class="mb-3">
+                    <i class="fas fa-bus-alt fa-4x opacity-75"></i>
                 </div>
-                <div class="col-md-6">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">✅ Gestion et confirmation des trajets</li>
-                        <li class="list-group-item">✅ Génération de rapports</li>
-                    
-                    </ul>
+                <h1 class="display-4 fw-bold mb-3">Bienvenue à l'Agence de Transport</h1>
+                <p class="lead mb-0 opacity-75">Système de gestion des réservations et trajets de transport</p>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="bg-soft-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                            style="width: 60px; height: 60px;">
+                            <i class="fas fa-clipboard-list fa-2x text-primary"></i>
+                        </div>
+                        <h5 class="card-title text-dark fw-bold">Réservations</h5>
+                        <p class="text-muted small mb-3">Enregistrez et gérez les réservations des clients avec
+                            confirmation en temps réel.</p>
+                        <h:link outcome="reservations" styleClass="btn btn-primary rounded-pill px-4">
+                            <i class="fas fa-arrow-right me-2"></i>Accéder
+                        </h:link>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="bg-soft-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                            style="width: 60px; height: 60px;">
+                            <i class="fas fa-route fa-2x text-success"></i>
+                        </div>
+                        <h5 class="card-title text-dark fw-bold">Trajets</h5>
+                        <p class="text-muted small mb-3">Organisez les trajets avec assignation de bus et chauffeurs
+                            disponibles.</p>
+                        <h:link outcome="trajets" styleClass="btn btn-success rounded-pill px-4">
+                            <i class="fas fa-arrow-right me-2"></i>Organiser
+                        </h:link>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="bg-soft-info rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                            style="width: 60px; height: 60px;">
+                            <i class="fas fa-chart-bar fa-2x text-info"></i>
+                        </div>
+                        <h5 class="card-title text-dark fw-bold">Rapports</h5>
+                        <p class="text-muted small mb-3">Consultez les statistiques et rapports détaillés de vos
+                            opérations.</p>
+                        <h:link outcome="reports" styleClass="btn btn-info rounded-pill px-4">
+                            <i class="fas fa-arrow-right me-2"></i>Consulter
+                        </h:link>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <h4 class="card-title text-primary mb-4">
+                            <i class="fas fa-check-circle me-2"></i>Fonctionnalités Principales
+                        </h4>
+                        <ul class="list-unstyled">
+                            <li class="mb-3 d-flex align-items-start">
+                                <i class="fas fa-check text-success me-3 mt-1"></i>
+                                <div>
+                                    <strong>Enregistrement des réservations</strong>
+                                    <p class="text-muted small mb-0">Créez et gérez les réservations clients avec
+                                        formulaires dynamiques</p>
+                                </div>
+                            </li>
+                            <li class="mb-3 d-flex align-items-start">
+                                <i class="fas fa-check text-success me-3 mt-1"></i>
+                                <div>
+                                    <strong>Vérification disponibilité des bus</strong>
+                                    <p class="text-muted small mb-0">Intégration avec le Service 1 pour vérifier les bus
+                                        disponibles</p>
+                                </div>
+                            </li>
+                            <li class="mb-3 d-flex align-items-start">
+                                <i class="fas fa-check text-success me-3 mt-1"></i>
+                                <div>
+                                    <strong>Vérification disponibilité des chauffeurs</strong>
+                                    <p class="text-muted small mb-0">Intégration avec le Service 2 pour assigner les
+                                        chauffeurs</p>
+                                </div>
+                            </li>
+                            <li class="mb-3 d-flex align-items-start">
+                                <i class="fas fa-check text-success me-3 mt-1"></i>
+                                <div>
+                                    <strong>Gestion et confirmation des trajets</strong>
+                                    <p class="text-muted small mb-0">Suivi complet du cycle de vie des trajets (planifié
+                                        → en cours → terminé)</p>
+                                </div>
+                            </li>
+                            <li class="d-flex align-items-start">
+                                <i class="fas fa-check text-success me-3 mt-1"></i>
+                                <div>
+                                    <strong>Génération de rapports</strong>
+                                    <p class="text-muted small mb-0">Statistiques détaillées par bus, chauffeur et
+                                        réservation</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <h4 class="card-title text-primary mb-4">
+                            <i class="fas fa-lightbulb me-2"></i>Nouveautés
+                        </h4>
+                        <div class="alert alert-soft-success mb-3">
+                            <div class="d-flex">
+                                <i class="fas fa-sparkles fa-lg me-3 mt-1"></i>
+                                <div>
+                                    <strong>Création manuelle de trajets</strong>
+                                    <p class="mb-0 small">Créez des trajets indépendamment des réservations pour une
+                                        meilleure planification</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-soft-info mb-3">
+                            <div class="d-flex">
+                                <i class="fas fa-link fa-lg me-3 mt-1"></i>
+                                <div>
+                                    <strong>Liaison réservation-trajet</strong>
+                                    <p class="mb-0 small">Associez une réservation à un trajet existant lors de la
+                                        création</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-soft-warning mb-0">
+                            <div class="d-flex">
+                                <i class="fas fa-magic fa-lg me-3 mt-1"></i>
+                                <div>
+                                    <strong>Formulaires dynamiques</strong>
+                                    <p class="mb-0 small">Auto-remplissage intelligent des champs d'itinéraire lors de
+                                        la sélection d'un trajet</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card border-0 shadow-sm mt-4 bg-soft-primary">
+            <div class="card-body text-center py-4">
+                <h5 class="text-primary mb-3">
+                    <i class="fas fa-rocket me-2"></i>Prêt à commencer ?
+                </h5>
+                <p class="text-muted mb-4">Choisissez une action rapide pour démarrer</p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <h:link outcome="reservations" styleClass="btn btn-primary rounded-pill px-4">
+                        <i class="fas fa-plus-circle me-2"></i>Nouvelle Réservation
+                    </h:link>
+                    <h:link outcome="trajets" styleClass="btn btn-outline-primary rounded-pill px-4">
+                        <i class="fas fa-map-marked-alt me-2"></i>Planifier un Trajet
+                    </h:link>
                 </div>
             </div>
         </div>

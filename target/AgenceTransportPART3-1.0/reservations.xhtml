@@ -5,58 +5,88 @@
     <ui:define name="title">Réservations - Agence Transport</ui:define>
 
     <ui:define name="content">
-        <div class="card mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>📋 Gestion des Réservations</h2>
-                <button type="button" class="btn btn-primary rounded-pill" data-bs-toggle="modal"
+        <div class="card border-0 shadow-sm mb-4 overflow-hidden">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h4 class="mb-0 text-primary fw-bold"><i class="fas fa-clipboard-list me-2"></i>Gestion des Réservations
+                </h4>
+                <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal"
                     data-bs-target="#newReservationModal">
-                    + Nouvelle Réservation
+                    <i class="fas fa-plus me-2"></i>Nouvelle Réservation
                 </button>
             </div>
 
-            <div class="table-container">
-                <h:dataTable value="#{reservationBean.reservations}" var="res" styleClass="w-100">
+            <div class="table-container p-0">
+                <h:dataTable value="#{reservationBean.reservations}" var="res"
+                    styleClass="table table-hover align-middle mb-0">
                     <h:column>
-                        <f:facet name="header">ID</f:facet>
-                        #{res.id}
+                        <f:facet name="header">ID
+                        </f:facet>
+                        <span class="ps-3 text-muted">##{res.id}</span>
                     </h:column>
                     <h:column>
-                        <f:facet name="header">Passager</f:facet>
-                        <div class="fw-bold">#{res.passengerName}</div>
-                        <small class="text-muted">#{res.passengerEmail}</small>
+                        <f:facet name="header">Passager
+                        </f:facet>
+                        <div class="fw-bold text-dark">#{res.passengerName}</div>
+                        <div class="small text-muted"><i class="far fa-envelope me-1"></i>#{res.passengerEmail}</div>
                     </h:column>
                     <h:column>
-                        <f:facet name="header">Trajet</f:facet>
-                        #{res.departureLocation} → #{res.destinationLocation}
+                        <f:facet name="header">Itinéraire
+                        </f:facet>
+                        <div class="d-flex align-items-center">
+                            <span
+                                class="badge bg-soft-primary text-primary border-0 me-2">#{res.departureLocation}</span>
+                            <i class="fas fa-long-arrow-alt-right text-muted mx-2"></i>
+                            <span
+                                class="badge bg-soft-success text-success border-0 ms-2">#{res.destinationLocation}</span>
+                        </div>
                     </h:column>
                     <h:column>
-                        <f:facet name="header">Date</f:facet>
-                        #{res.departureDate}
+                        <f:facet name="header">Date de départ
+                        </f:facet>
+                        <div class="small fw-semibold">
+                            <i class="far fa-calendar-alt text-muted me-1"></i>
+                            <h:outputText value="#{res.departureDate}">
+                                <f:convertDateTime type="localDateTime" pattern="dd MMM yyyy, HH:mm" locale="fr" />
+                            </h:outputText>
+                        </div>
                     </h:column>
                     <h:column>
-                        <f:facet name="header">Places</f:facet>
-                        #{res.numberOfSeats}
+                        <f:facet name="header">
+                            Places</f:facet>
+                        <div class="text-center">
+                            <span class="badge bg-light text-dark border">
+                                <i class="fas fa-users me-1 text-muted"></i>#{res.numberOfSeats}
+                            </span>
+                        </div>
                     </h:column>
                     <h:column>
                         <f:facet name="header">Statut</f:facet>
-                        <span class="badge #{res.status == 'PENDING' ? 'badge-warning' : 
-                                          res.status == 'CONFIRMED' ? 'badge-success' : 
-                                          res.status == 'CANCELLED' ? 'badge-danger' : 'badge-info'}">
+                        <span class="badge rounded-pill #{res.status == 'PENDING' ? 'bg-warning text-dark' : 
+                                          res.status == 'CONFIRMED' ? 'bg-success' : 
+                                          res.status == 'CANCELLED' ? 'bg-danger' : 'bg-info'}">
                             #{res.status}
                         </span>
                     </h:column>
                     <h:column>
-                        <f:facet name="header">Actions</f:facet>
-                        <h:form styleClass="d-inline">
+                        <f:facet name="header">Actions
+                        </f:facet>
+                        <h:form styleClass="d-inline pe-3">
                             <h:commandLink action="#{reservationBean.prepareConfirm(res)}"
-                                styleClass="btn btn-sm btn-outline-success me-1" rendered="#{res.status == 'PENDING'}">
+                                styleClass="btn btn-sm btn-outline-success me-1 rounded-pill"
+                                rendered="#{res.status == 'PENDING'}">
                                 <f:ajax render="confirmForm"
-                                    onevent="function(data){ if(data.status === 'success') new bootstrap.Modal(document.getElementById('confirmModal')).show(); }" />
-                                Confirmer
+                                    onevent="(data) => { if(data.status === 'success') new bootstrap.Modal(document.getElementById('confirmModal')).show(); }" />
+                                <i class="fas fa-check me-1"></i>Confirmer
                             </h:commandLink>
                             <h:commandLink action="#{reservationBean.cancelReservation(res.id)}"
-                                styleClass="btn btn-sm btn-outline-danger" rendered="#{res.status == 'PENDING'}">
-                                Annuler
+                                styleClass="btn btn-sm btn-outline-danger me-1 rounded-pill"
+                                rendered="#{res.status == 'PENDING'}">
+                                <i class="fas fa-ban me-1"></i>Annuler
+                            </h:commandLink>
+                            <h:commandLink styleClass="btn btn-sm btn-outline-danger rounded-pill"
+                                onclick="if(!confirm('Êtes-vous sûr de vouloir supprimer cette réservation ? Cette action est irréversible.')) return false;">
+                                <i class="fas fa-trash me-1"></i>Supprimer
+                                <f:ajax listener="#{reservationBean.deleteReservation(res.id)}" render="@form" />
                             </h:commandLink>
                         </h:form>
                     </h:column>
@@ -66,41 +96,62 @@
 
         <!-- Modal for Confirmation with Resources -->
         <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
                     <h:form id="confirmForm">
-                        <div class="modal-header">
-                            <h:panelGroup layout="block" styleClass="modal-title h5">Confirmer la Réservation
-                                ##{reservationBean.selectedReservation.id}</h:panelGroup>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <div class="modal-header bg-success text-white py-3">
+                            <h5 class="modal-title fw-bold">
+                                <i class="fas fa-check-double me-2"></i>Validation de la Réservation
+                                ##{reservationBean.selectedReservation.id}
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
                         </div>
-                        <div class="modal-body">
-                            <div class="alert alert-info">
-                                Affectez un bus et un chauffeur pour valider cette réservation.
+                        <div class="modal-body p-4">
+                            <div class="alert alert-soft-success mb-4 p-3 border-0 rounded-3">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-info-circle fa-lg mt-1"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        Sélectionnez les ressources nécessaires pour finaliser l'expédition du passager.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-bold small text-muted text-uppercase">Bus Disponible</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i
+                                            class="fas fa-bus text-primary"></i></span>
+                                    <h:selectOneMenu value="#{reservationBean.busIdForConfirmation}"
+                                        styleClass="form-select border-0 bg-light shadow-none" required="true">
+                                        <f:selectItem itemLabel="-- Choisir un bus --" itemValue="" />
+                                        <f:selectItems value="#{reservationBean.availableBuses}" var="b"
+                                            itemLabel="#{b.label}" itemValue="#{b.id}" />
+                                    </h:selectOneMenu>
+                                </div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Bus (Service 1)</label>
-                                <h:selectOneMenu value="#{reservationBean.busIdForConfirmation}"
-                                    styleClass="form-select" required="true">
-                                    <f:selectItem itemLabel="-- Sélectionner un bus --" itemValue="" />
-                                    <f:selectItems value="#{reservationBean.availableBuses}" var="b"
-                                        itemLabel="#{b.label}" itemValue="#{b.id}" />
-                                </h:selectOneMenu>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Chauffeur (Service 2)</label>
-                                <h:selectOneMenu value="#{reservationBean.chauffeurIdForConfirmation}"
-                                    styleClass="form-select" required="true">
-                                    <f:selectItem itemLabel="-- Sélectionner un chauffeur --" itemValue="" />
-                                    <f:selectItems value="#{reservationBean.availableChauffeurs}" var="c"
-                                        itemLabel="#{c.label}" itemValue="#{c.id}" />
-                                </h:selectOneMenu>
+                                <label class="form-label fw-bold small text-muted text-uppercase">Chauffeur
+                                    Assigné</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i
+                                            class="fas fa-user-tie text-primary"></i></span>
+                                    <h:selectOneMenu value="#{reservationBean.chauffeurIdForConfirmation}"
+                                        styleClass="form-select border-0 bg-light shadow-none" required="true">
+                                        <f:selectItem itemLabel="-- Choisir un chauffeur --" itemValue="" />
+                                        <f:selectItems value="#{reservationBean.availableChauffeurs}" var="c"
+                                            itemLabel="#{c.label}" itemValue="#{c.id}" />
+                                    </h:selectOneMenu>
+                                </div>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-                            <h:commandButton value="Valider la Confirmation"
-                                action="#{reservationBean.confirmReservation}" styleClass="btn btn-success" />
+                        <div class="modal-footer bg-light border-0 py-3">
+                            <button type="button" class="btn btn-link text-secondary text-decoration-none"
+                                data-bs-dismiss="modal">Annuler</button>
+                            <h:commandButton value="Confirmer et Créer Trajet"
+                                action="#{reservationBean.confirmReservation}"
+                                styleClass="btn btn-success px-4 rounded-pill fw-bold shadow-sm" />
                         </div>
                     </h:form>
                 </div>
@@ -109,63 +160,102 @@
 
         <!-- Modal for New Reservation -->
         <div class="modal fade" id="newReservationModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
                     <h:form id="reservationForm">
-                        <div class="modal-header">
-                            <h:panelGroup layout="block" styleClass="modal-title h5">Nouvelle Réservation</h:panelGroup>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <div class="modal-header bg-primary text-white py-3">
+                            <h5 class="modal-title fw-bold"><i class="fas fa-plus-circle me-2"></i>Nouvelle Réservation
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
                         </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label class="form-label">Nom du passager</label>
-                                <h:inputText value="#{reservationBean.passengerName}" styleClass="form-control"
-                                    required="true" />
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Email</label>
-                                <h:inputText value="#{reservationBean.passengerEmail}" styleClass="form-control"
-                                    required="true" />
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Départ</label>
-                                <h:inputText value="#{reservationBean.departureLocation}" styleClass="form-control"
-                                    required="true" />
-                            </div>
-                            <div class="mb-3 border-top pt-3 mt-3">
-                                <label class="form-label d-block fw-bold text-primary">Ou choisir un trajet
-                                    existant</label>
-                                <h:selectOneMenu value="#{reservationBean.selectedTrajetId}" styleClass="form-select">
-                                    <f:selectItem itemLabel="-- Aucun trajet pré-défini --" itemValue="" />
-                                    <f:selectItems value="#{reservationBean.plannedTrajets}" var="pt"
-                                        itemLabel="#{pt.departureLocation} → #{pt.destinationLocation} (#{pt.departureDate})"
-                                        itemValue="#{pt.id}" />
-                                </h:selectOneMenu>
-                                <small class="text-muted">Si sélectionné, le bus et le chauffeur seront
-                                    partagés.</small>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Destination</label>
-                                <h:inputText value="#{reservationBean.destinationLocation}" styleClass="form-control"
-                                    required="true" />
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Date et Heure de départ</label>
-                                <h:inputText value="#{reservationBean.departureDate}" styleClass="form-control"
-                                    type="datetime-local" required="true">
-                                    <f:convertDateTime type="localDateTime" pattern="yyyy-MM-dd'T'HH:mm" />
-                                </h:inputText>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Nombre de places</label>
-                                <h:inputText value="#{reservationBean.numberOfSeats}" styleClass="form-control"
-                                    required="true" />
+                        <div class="modal-body p-4">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-muted text-uppercase">Information
+                                        Passager</label>
+                                    <div class="mb-3">
+                                        <div class="input-group mb-2">
+                                            <span class="input-group-text bg-light border-0"><i
+                                                    class="fas fa-user text-muted"></i></span>
+                                            <h:inputText value="#{reservationBean.passengerName}"
+                                                styleClass="form-control border-0 bg-light" required="true" />
+                                        </div>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-0"><i
+                                                    class="fas fa-at text-muted"></i></span>
+                                            <h:inputText value="#{reservationBean.passengerEmail}"
+                                                styleClass="form-control border-0 bg-light" required="true" />
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small text-muted text-uppercase">Nombre de
+                                            passagers</label>
+                                        <div class="input-group w-50">
+                                            <span class="input-group-text bg-light border-0"><i
+                                                    class="fas fa-users text-muted"></i></span>
+                                            <h:inputText value="#{reservationBean.numberOfSeats}"
+                                                styleClass="form-control border-0 bg-light" required="true" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 border-start ps-md-4">
+                                    <label class="form-label fw-bold small text-primary text-uppercase">
+                                        <i class="fas fa-route me-1"></i>Sélection du Trajet
+                                    </label>
+                                    <div class="mb-4">
+                                        <h:selectOneMenu value="#{reservationBean.selectedTrajetId}"
+                                            styleClass="form-select border-primary shadow-sm mb-2">
+                                            <f:selectItem itemLabel="-- Créer un nouvel itinéraire --"
+                                                itemValue="#{null}" />
+                                            <f:selectItems value="#{reservationBean.plannedTrajets}" var="pt"
+                                                itemLabel="#{pt.departureLocation} → #{pt.destinationLocation} (#{pt.departureDate})"
+                                                itemValue="#{pt.id}" />
+                                            <f:ajax event="change" listener="#{reservationBean.onTrajetSelect}"
+                                                render="itineraryGroup" />
+                                        </h:selectOneMenu>
+                                        <div class="form-text small italic bg-soft-info p-2 rounded">
+                                            <i class="fas fa-magic me-1"></i>Choisir un trajet remplit automatiquement
+                                            les détails ci-dessous.
+                                        </div>
+                                    </div>
+
+                                    <h:panelGroup id="itineraryGroup" layout="block"
+                                        styleClass="p-3 bg-light rounded-3">
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold text-muted">Point de départ</label>
+                                            <h:inputText value="#{reservationBean.departureLocation}"
+                                                styleClass="form-control form-control-sm border-0 bg-white"
+                                                required="true"
+                                                readonly="#{reservationBean.selectedTrajetId != null}" />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold text-muted">Destination</label>
+                                            <h:inputText value="#{reservationBean.destinationLocation}"
+                                                styleClass="form-control form-control-sm border-0 bg-white"
+                                                required="true"
+                                                readonly="#{reservationBean.selectedTrajetId != null}" />
+                                        </div>
+                                        <div class="mb-0">
+                                            <label class="form-label small fw-bold text-muted">Date &amp; Heure</label>
+                                            <h:inputText value="#{reservationBean.departureDate}"
+                                                styleClass="form-control form-control-sm border-0 bg-white"
+                                                type="datetime-local" required="true"
+                                                readonly="#{reservationBean.selectedTrajetId != null}">
+                                                <f:convertDateTime type="localDateTime" pattern="yyyy-MM-dd'T'HH:mm" />
+                                            </h:inputText>
+                                        </div>
+                                    </h:panelGroup>
+                                </div>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-                            <h:commandButton value="Enregistrer" action="#{reservationBean.createReservation}"
-                                styleClass="btn btn-primary" />
+                        <div class="modal-footer bg-light border-0 py-3">
+                            <button type="button" class="btn btn-link text-secondary text-decoration-none"
+                                data-bs-dismiss="modal">Annuler</button>
+                            <h:commandButton value="Valider la Réservation"
+                                action="#{reservationBean.createReservation}"
+                                styleClass="btn btn-primary px-5 rounded-pill fw-bold shadow" />
                         </div>
                     </h:form>
                 </div>

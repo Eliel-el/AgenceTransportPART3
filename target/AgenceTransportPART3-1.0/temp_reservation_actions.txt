@@ -1,0 +1,21 @@
+                    <h:column>
+                        <f:facet name="header" >Actions
+                        </f:facet>
+                        <h:form styleClass="d-inline pe-3">
+                            <h:commandLink action="#{reservationBean.prepareConfirm(res)}"
+                                styleClass="btn btn-sm btn-outline-success me-1 rounded-pill" rendered="#{res.status == 'PENDING'}">
+                                <f:ajax render="confirmForm"
+                                    onevent="(data) => { if(data.status === 'success') new bootstrap.Modal(document.getElementById('confirmModal')).show(); }" />
+                                <i class="fas fa-check me-1"></i>Confirmer
+                            </h:commandLink>
+                            <h:commandLink action="#{reservationBean.cancelReservation(res.id)}"
+                                styleClass="btn btn-sm btn-outline-warning me-1 rounded-pill" rendered="#{res.status == 'PENDING'}">
+                                <i class="fas fa-ban me-1"></i>Annuler
+                            </h:commandLink>
+                            <h:commandLink action="#{reservationBean.deleteReservation(res.id)}"
+                                styleClass="btn btn-sm btn-outline-danger rounded-pill"
+                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette réservation ?');">
+                                <i class="fas fa-trash me-1"></i>Supprimer
+                            </h:commandLink>
+                        </h:form>
+                    </h:column>

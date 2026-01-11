@@ -83,8 +83,9 @@ public class ReservationBean implements Serializable {
                 this.departureDate = t.getDepartureDate();
             }
         } else {
-            // Option to clear or keeping current manually entered value?
-            // Usually clearer to let user edit if they deselect
+            this.departureLocation = null;
+            this.destinationLocation = null;
+            this.departureDate = null;
         }
     }
 
@@ -307,6 +308,7 @@ public class ReservationBean implements Serializable {
         destinationLocation = null;
         departureDate = null;
         numberOfSeats = null;
+        selectedTrajetId = null;
     }
 
     /**
