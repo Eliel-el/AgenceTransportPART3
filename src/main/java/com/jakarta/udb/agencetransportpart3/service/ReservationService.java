@@ -1,6 +1,7 @@
 package com.jakarta.udb.agencetransportpart3.service;
 
 import com.jakarta.udb.agencetransportpart3.entity.Reservation;
+import com.jakarta.udb.agencetransportpart3.entity.Trajet;
 import com.jakarta.udb.agencetransportpart3.integration.BusServiceClient;
 import com.jakarta.udb.agencetransportpart3.integration.ChauffeurServiceClient;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -14,8 +15,7 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class ReservationService {
 
-    private static final Logger LOGGER =
-            Logger.getLogger(ReservationService.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ReservationService.class.getName());
 
     @Inject
     private JsonPersistenceService persistenceService;
@@ -25,6 +25,9 @@ public class ReservationService {
 
     @Inject
     private ChauffeurServiceClient chauffeurServiceClient;
+
+    @Inject
+    private TrajetService trajetService;
 
     // ==============================
     // FIND ALL
@@ -101,8 +104,8 @@ public class ReservationService {
     // CONFIRM
     // ==============================
     public boolean confirmReservation(Long reservationId,
-                                      Long busId,
-                                      Long chauffeurId) {
+            Long busId,
+            Long chauffeurId) {
 
         Reservation reservation = findById(reservationId);
         if (reservation == null) {
@@ -110,6 +113,17 @@ public class ReservationService {
         }
 
         String dateStr = reservation.getDepartureDate().toString();
+
+        // If reservation is already linked to a trajet, use that trajet's info or
+        // update it
+        if (reservation.getTrajetId() != null) {
+            Trajet trajet = trajetService.findById(reservation.getTrajetId());
+            if (trajet != null) {
+                trajet.setBusId(busId);
+                trajet.setChauffeurId(chauffeurId);
+                trajetService.updateTrajet(trajet);
+            }
+        }
 
         if (!busServiceClient.checkBusAvailability(busId, dateStr)) {
             return false;

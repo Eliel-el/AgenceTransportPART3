@@ -1,6 +1,7 @@
 package com.jakarta.udb.agencetransportpart3.bean;
 
 import com.jakarta.udb.agencetransportpart3.entity.Reservation;
+import com.jakarta.udb.agencetransportpart3.entity.Trajet;
 import com.jakarta.udb.agencetransportpart3.integration.BusServiceClient;
 import com.jakarta.udb.agencetransportpart3.integration.ChauffeurServiceClient;
 import com.jakarta.udb.agencetransportpart3.service.ReservationService;
@@ -39,6 +40,8 @@ public class ReservationBean implements Serializable {
     private List<Reservation> reservations;
     private Reservation selectedReservation;
     private Reservation newReservation;
+    private List<Trajet> plannedTrajets;
+    private Long selectedTrajetId;
 
     // Available resources from external Service 1 and 2
     private List<java.util.Map<String, String>> availableBuses;
@@ -60,7 +63,29 @@ public class ReservationBean implements Serializable {
     @PostConstruct
     public void init() {
         loadReservations();
+        loadPlannedTrajets();
         newReservation = new Reservation();
+    }
+
+    public void loadPlannedTrajets() {
+        plannedTrajets = trajetService.findByStatus("PLANNED");
+    }
+
+    /**
+     * AJAX Listener for trajet selection
+     */
+    public void onTrajetSelect() {
+        if (selectedTrajetId != null) {
+            Trajet t = trajetService.findById(selectedTrajetId);
+            if (t != null) {
+                this.departureLocation = t.getDepartureLocation();
+                this.destinationLocation = t.getDestinationLocation();
+                this.departureDate = t.getDepartureDate();
+            }
+        } else {
+            // Option to clear or keeping current manually entered value?
+            // Usually clearer to let user edit if they deselect
+        }
     }
 
     /**
@@ -83,12 +108,23 @@ public class ReservationBean implements Serializable {
             reservation.setDestinationLocation(destinationLocation);
             reservation.setDepartureDate(departureDate);
             reservation.setNumberOfSeats(numberOfSeats);
+            reservation.setTrajetId(selectedTrajetId);
 
             reservationService.createReservation(reservation);
+
+            // If an existing trajet was selected, link this reservation to it
+            if (selectedTrajetId != null) {
+                Trajet t = trajetService.findById(selectedTrajetId);
+                if (t != null) {
+                    t.setReservationId(reservation.getId());
+                    trajetService.updateTrajet(t);
+                }
+            }
 
             addMessage(FacesMessage.SEVERITY_INFO, "Success", "Reservation created successfully!");
             clearForm();
             loadReservations();
+            loadPlannedTrajets();
 
             return "reservations?faces-redirect=true";
         } catch (Exception e) {
@@ -391,5 +427,21 @@ public class ReservationBean implements Serializable {
 
     public void setAvailableChauffeurs(List<java.util.Map<String, String>> availableChauffeurs) {
         this.availableChauffeurs = availableChauffeurs;
+    }
+
+    public List<Trajet> getPlannedTrajets() {
+        return plannedTrajets;
+    }
+
+    public void setPlannedTrajets(List<Trajet> plannedTrajets) {
+        this.plannedTrajets = plannedTrajets;
+    }
+
+    public Long getSelectedTrajetId() {
+        return selectedTrajetId;
+    }
+
+    public void setSelectedTrajetId(Long selectedTrajetId) {
+        this.selectedTrajetId = selectedTrajetId;
     }
 }

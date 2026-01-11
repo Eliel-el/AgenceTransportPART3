@@ -5,59 +5,189 @@
     <ui:define name="title">Trajets - Agence Transport</ui:define>
 
     <ui:define name="content">
-        <div class="card mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>🚍 Gestion des Trajets</h2>
-                <h:form>
-                    <h:commandButton action="#{trajetBean.loadTrajets}" value="Actualiser"
-                        styleClass="btn btn-outline-primary btn-sm rounded-pill" />
-                </h:form>
+        <!-- Dashboard Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stat-card bg-primary text-white p-3 rounded shadow-sm">
+                    <h6 class="text-uppercase small">Total Trajets</h6>
+                    <h2 class="mb-0">#{trajetBean.totalCount}</h2>
+                </div>
             </div>
+            <div class="col-md-3">
+                <div class="stat-card bg-info text-white p-3 rounded shadow-sm">
+                    <h6 class="text-uppercase small">Planiﬁés</h6>
+                    <h2 class="mb-0">#{trajetBean.plannedCount}</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card bg-warning text-dark p-3 rounded shadow-sm">
+                    <h6 class="text-uppercase small">En Cours</h6>
+                    <h2 class="mb-0">#{trajetBean.inProgressCount}</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card bg-success text-white p-3 rounded shadow-sm">
+                    <h6 class="text-uppercase small">Terminés</h6>
+                    <h2 class="mb-0">#{trajetBean.completedCount}</h2>
+                </div>
+            </div>
+        </div>
 
-            <div class="table-container">
-                <h:dataTable value="#{trajetBean.trajets}" var="t" styleClass="w-100">
-                    <h:column>
-                        <f:facet name="header">ID</f:facet>
-                        #{t.id}
-                    </h:column>
-                    <h:column>
-                        <f:facet name="header">Itinéraire</f:facet>
-                        <div class="fw-bold">#{t.departureLocation} → #{t.destinationLocation}</div>
-                        <small class="text-muted">Départ: #{t.departureDate}</small>
-                    </h:column>
-                    <h:column>
-                        <f:facet name="header">Ressources</f:facet>
-                        <div><small>Bus: #{t.busNumber}</small></div>
-                        <div><small>Chauffeur: #{t.chauffeurName}</small></div>
-                    </h:column>
-                    <h:column>
-                        <f:facet name="header">Statut</f:facet>
-                        <span class="badge #{t.status == 'PLANNED' ? 'badge-info' : 
-                                          t.status == 'IN_PROGRESS' ? 'badge-warning' : 
-                                          t.status == 'COMPLETED' ? 'badge-success' : 'badge-danger'}">
-                            #{t.status}
-                        </span>
-                    </h:column>
-                    <h:column>
-                        <f:facet name="header">Actions</f:facet>
-                        <h:form styleClass="d-inline">
-                            <h:commandLink action="#{trajetBean.startTrajet(t.id)}"
-                                styleClass="btn btn-sm btn-outline-primary me-1" rendered="#{t.status == 'PLANNED'}">
-                                Démarrer
-                            </h:commandLink>
-                            <h:commandLink action="#{trajetBean.completeTrajet(t.id)}"
-                                styleClass="btn btn-sm btn-outline-success me-1"
-                                rendered="#{t.status == 'IN_PROGRESS'}">
-                                Terminer
-                            </h:commandLink>
-                            <h:commandLink action="#{trajetBean.cancelTrajet(t.id)}"
-                                styleClass="btn btn-sm btn-outline-danger"
-                                rendered="#{t.status == 'PLANNED' or t.status == 'IN_PROGRESS'}">
-                                Annuler
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">🚍 Gestion des Trajets</h4>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary btn-sm rounded-pill px-3" data-bs-toggle="modal"
+                            data-bs-target="#newTrajetModal">
+                            + Nouveau Trajet
+                        </button>
+                        <h:form styleClass="d-flex gap-2">
+                            <h:inputText value="#{trajetBean.destinationSearch}"
+                                styleClass="form-control form-control-sm rounded-pill" />
+                            <h:selectOneMenu value="#{trajetBean.statusFilter}"
+                                styleClass="form-select form-select-sm rounded-pill">
+                                <f:selectItem itemLabel="Tous les statuts" itemValue="ALL" />
+                                <f:selectItem itemLabel="PLANIFIÉ" itemValue="PLANNED" />
+                                <f:selectItem itemLabel="EN COURS" itemValue="IN_PROGRESS" />
+                                <f:selectItem itemLabel="TERMINÉ" itemValue="COMPLETED" />
+                                <f:selectItem itemLabel="ANNULÉ" itemValue="CANCELLED" />
+                            </h:selectOneMenu>
+                            <h:commandLink action="#{trajetBean.loadTrajets}"
+                                styleClass="btn btn-primary btn-sm rounded-pill px-3">
+                                <i class="fas fa-search me-1"></i> Filtrer
                             </h:commandLink>
                         </h:form>
-                    </h:column>
-                </h:dataTable>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <h:dataTable value="#{trajetBean.trajets}" var="t"
+                            styleClass="table table-hover align-middle mb-0">
+                            <h:column>
+                                <f:facet name="header">ID</f:facet>
+                                <span class="ps-4 text-muted small">##{t.id}</span>
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Itinéraire</f:facet>
+                                <div>
+                                    <div class="fw-bold text-primary">#{t.departureLocation} → #{t.destinationLocation}
+                                    </div>
+                                    <div class="small text-muted">
+                                        <i class="far fa-calendar-alt me-1"></i>
+                                        <h:outputText value="#{t.departureDate}">
+                                            <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm" />
+                                        </h:outputText>
+                                    </div>
+                                </div>
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Ressources</f:facet>
+                                <div class="resource-info">
+                                    <div class="small mb-1">
+                                        <span class="badge bg-light text-dark border me-1">Bus</span>
+                                        <span class="#{t.busNumber == null ? 'text-danger' : ''}">
+                                            #{t.busNumber != null ? t.busNumber : 'Non assigné'}
+                                        </span>
+                                    </div>
+                                    <div class="small">
+                                        <span class="badge bg-light text-dark border me-1">Driver</span>
+                                        <span class="#{t.chauffeurName == null ? 'text-danger' : ''}">
+                                            #{t.chauffeurName != null ? t.chauffeurName : 'Non assigné'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Statut</f:facet>
+                                <span class="badge rounded-pill #{t.status == 'PLANNED' ? 'bg-info' : 
+                                              t.status == 'IN_PROGRESS' ? 'bg-warning text-dark' : 
+                                              t.status == 'COMPLETED' ? 'bg-success' : 'bg-danger'}">
+                                    #{t.status}
+                                </span>
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Réel</f:facet>
+                                <div class="small text-muted">
+                                    <h:outputText value="#{t.actualDepartureDate}"
+                                        rendered="#{t.actualDepartureDate != null}">
+                                        <f:convertDateTime type="localDateTime" pattern="HH:mm" />
+                                    </h:outputText>
+                                    <h:outputText value=" - "
+                                        rendered="#{t.actualDepartureDate != null and t.actualArrivalDate != null}" />
+                                    <h:outputText value="#{t.actualArrivalDate}"
+                                        rendered="#{t.actualArrivalDate != null}">
+                                        <f:convertDateTime type="localDateTime" pattern="HH:mm" />
+                                    </h:outputText>
+                                </div>
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Actions</f:facet>
+                                <h:form styleClass="pe-4">
+                                    <div class="btn-group">
+                                        <h:commandLink action="#{trajetBean.startTrajet(t.id)}"
+                                            styleClass="btn btn-sm btn-outline-primary"
+                                            rendered="#{t.status == 'PLANNED'}" title="Démarrer le trajet">
+                                            ▶️
+                                        </h:commandLink>
+                                        <h:commandLink action="#{trajetBean.completeTrajet(t.id)}"
+                                            styleClass="btn btn-sm btn-outline-success"
+                                            rendered="#{t.status == 'IN_PROGRESS'}" title="Terminer le trajet">
+                                            ✅
+                                        </h:commandLink>
+                                        <h:commandLink action="#{trajetBean.cancelTrajet(t.id)}"
+                                            styleClass="btn btn-sm btn-outline-danger"
+                                            rendered="#{t.status == 'PLANNED' or t.status == 'IN_PROGRESS'}"
+                                            title="Annuler le trajet">
+                                            ❌
+                                        </h:commandLink>
+                                    </div>
+                                </h:form>
+                            </h:column>
+                        </h:dataTable>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal for New Trajet -->
+            <div class="modal fade" id="newTrajetModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <h:form id="trajetForm">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Nouveau Trajet Manuel</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Départ</label>
+                                    <h:inputText value="#{trajetBean.newTrajet.departureLocation}"
+                                        styleClass="form-control" required="true" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Destination</label>
+                                    <h:inputText value="#{trajetBean.newTrajet.destinationLocation}"
+                                        styleClass="form-control" required="true" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Date et Heure</label>
+                                    <h:inputText value="#{trajetBean.newTrajet.departureDate}" styleClass="form-control"
+                                        type="datetime-local" required="true">
+                                        <f:convertDateTime type="localDateTime" pattern="yyyy-MM-dd'T'HH:mm" />
+                                    </h:inputText>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                                <h:commandLink action="#{trajetBean.saveNewTrajet}" styleClass="btn btn-primary">
+                                    Enregistrer
+                                </h:commandLink>
+                            </div>
+                        </h:form>
+                    </div>
+                </div>
             </div>
         </div>
     </ui:define>

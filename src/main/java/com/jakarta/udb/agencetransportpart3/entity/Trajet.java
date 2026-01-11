@@ -23,7 +23,7 @@ public class Trajet implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "RESERVATION_ID", nullable = false)
+    @Column(name = "RESERVATION_ID", nullable = true)
     private Long reservationId;
 
     @Column(name = "BUS_ID")
@@ -55,6 +55,15 @@ public class Trajet implements Serializable {
 
     @Column(name = "DISTANCE_KM")
     private Double distanceKm;
+
+    @Column(name = "ACTUAL_DEPARTURE_DATE")
+    private LocalDateTime actualDepartureDate;
+
+    @Column(name = "ACTUAL_ARRIVAL_DATE")
+    private LocalDateTime actualArrivalDate;
+
+    @Column(name = "NOTES", length = 500)
+    private String notes;
 
     @Column(name = "CREATED_AT")
     private LocalDateTime createdAt;
@@ -179,6 +188,30 @@ public class Trajet implements Serializable {
 
     public void setDistanceKm(Double distanceKm) {
         this.distanceKm = distanceKm;
+    }
+
+    public LocalDateTime getActualDepartureDate() {
+        return actualDepartureDate;
+    }
+
+    public void setActualDepartureDate(LocalDateTime actualDepartureDate) {
+        this.actualDepartureDate = actualDepartureDate;
+    }
+
+    public LocalDateTime getActualArrivalDate() {
+        return actualArrivalDate;
+    }
+
+    public void setActualArrivalDate(LocalDateTime actualArrivalDate) {
+        this.actualArrivalDate = actualArrivalDate;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 
     public LocalDateTime getCreatedAt() {

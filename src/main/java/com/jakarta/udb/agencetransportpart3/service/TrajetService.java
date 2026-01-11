@@ -6,6 +6,8 @@ import com.jakarta.udb.agencetransportpart3.integration.BusServiceClient;
 import com.jakarta.udb.agencetransportpart3.integration.ChauffeurServiceClient;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.json.bind.Jsonb;
+import jakarta.json.bind.JsonbBuilder;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.logging.Logger;
@@ -22,6 +24,8 @@ public class TrajetService {
     @Inject
     private JsonPersistenceService persistenceService;
 
+    private final Jsonb jsonb = JsonbBuilder.create();
+
     @Inject
     private ReservationService reservationService;
 
@@ -32,9 +36,30 @@ public class TrajetService {
     private ChauffeurServiceClient chauffeurServiceClient;
 
     /**
+     * Create a direct trajet (without initial reservation)
+     */
+    public Trajet createDirectTrajet(Trajet trajet) {
+        List<Trajet> all = findAll();
+        long nextId = all.stream()
+                .mapToLong(Trajet::getId)
+                .max()
+                .orElse(0L) + 1;
+
+        trajet.setId(nextId);
+        trajet.setStatus("PLANNED");
+        trajet.setCreatedAt(LocalDateTime.now());
+        trajet.setUpdatedAt(LocalDateTime.now());
+
+        all.add(trajet);
+        persistenceService.saveAll(all, Trajet.class);
+        return trajet;
+    }
+
+    /**
      * Create a new trajet from a reservation
      */
     public Trajet createTrajet(Long reservationId, Long busId, Long chauffeurId) {
+        // ... (existing logic)
         // Get reservation details
         Reservation reservation = reservationService.findById(reservationId);
         if (reservation == null) {
@@ -210,7 +235,12 @@ public class TrajetService {
     public void startTrajet(Long id) {
         Trajet trajet = findById(id);
         if (trajet != null) {
+            if (trajet.getBusId() == null || trajet.getChauffeurId() == null) {
+                throw new IllegalStateException(
+                        "Un bus et un chauffeur doivent être assignés avant de démarrer le trajet.");
+            }
             trajet.setStatus("IN_PROGRESS");
+            trajet.setActualDepartureDate(LocalDateTime.now());
             updateTrajet(trajet);
             LOGGER.info("Started trajet: " + id);
         }
@@ -223,7 +253,7 @@ public class TrajetService {
         Trajet trajet = findById(id);
         if (trajet != null) {
             trajet.setStatus("COMPLETED");
-            trajet.setArrivalDate(LocalDateTime.now());
+            trajet.setActualArrivalDate(LocalDateTime.now());
             updateTrajet(trajet);
             LOGGER.info("Completed trajet: " + id);
         }

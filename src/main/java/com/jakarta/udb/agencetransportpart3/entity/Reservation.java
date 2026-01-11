@@ -46,6 +46,9 @@ public class Reservation implements Serializable {
     @Column(name = "STATUS", nullable = false, length = 20)
     private String status; // PENDING, CONFIRMED, CANCELLED
 
+    @Column(name = "TRAJET_ID")
+    private Long trajetId;
+
     @Column(name = "CREATED_AT")
     private LocalDateTime createdAt;
 
@@ -146,6 +149,14 @@ public class Reservation implements Serializable {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Long getTrajetId() {
+        return trajetId;
+    }
+
+    public void setTrajetId(Long trajetId) {
+        this.trajetId = trajetId;
     }
 
     public LocalDateTime getCreatedAt() {

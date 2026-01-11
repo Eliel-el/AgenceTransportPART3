@@ -26,9 +26,16 @@ public class TrajetBean implements Serializable {
     private List<Trajet> trajets;
     private Trajet selectedTrajet;
 
+    // Filters
+    private String destinationSearch;
+    private String statusFilter;
+
     // For assignment
     private Long busIdForAssignment;
     private Long chauffeurIdForAssignment;
+
+    // For manual creation
+    private Trajet newTrajet = new Trajet();
 
     @PostConstruct
     public void init() {
@@ -36,17 +43,59 @@ public class TrajetBean implements Serializable {
     }
 
     /**
-     * Load all trajets
+     * Load all trajets with basic filtering
      */
     public void loadTrajets() {
         trajets = trajetService.findAll();
+        applyFilters();
     }
 
     /**
-     * Load trajets by status
+     * Create a new trajet manually
      */
-    public void loadTrajetsByStatus(String status) {
-        trajets = trajetService.findByStatus(status);
+    public String saveNewTrajet() {
+        try {
+            trajetService.createDirectTrajet(newTrajet);
+            addMessage(FacesMessage.SEVERITY_INFO, "Success", "Trajet créé avec succès !");
+            loadTrajets();
+            newTrajet = new Trajet();
+            return "trajets?faces-redirect=true";
+        } catch (Exception e) {
+            addMessage(FacesMessage.SEVERITY_ERROR, "Error", "Erreur lors de la création : " + e.getMessage());
+            return null;
+        }
+    }
+
+    private void applyFilters() {
+        if (destinationSearch != null && !destinationSearch.isEmpty()) {
+            trajets = trajets.stream()
+                    .filter(t -> t.getDestinationLocation().toLowerCase().contains(destinationSearch.toLowerCase()))
+                    .collect(java.util.stream.Collectors.toList());
+        }
+        if (statusFilter != null && !statusFilter.isEmpty() && !"ALL".equals(statusFilter)) {
+            trajets = trajets.stream()
+                    .filter(t -> t.getStatus().equals(statusFilter))
+                    .collect(java.util.stream.Collectors.toList());
+        }
+    }
+
+    /**
+     * Dashboard statistics
+     */
+    public long getPlannedCount() {
+        return trajetService.getPlannedTrajetsCount();
+    }
+
+    public long getInProgressCount() {
+        return trajetService.findAll().stream().filter(t -> "IN_PROGRESS".equals(t.getStatus())).count();
+    }
+
+    public long getCompletedCount() {
+        return trajetService.getCompletedTrajetsCount();
+    }
+
+    public long getTotalCount() {
+        return trajetService.findAll().size();
     }
 
     /**
@@ -212,5 +261,29 @@ public class TrajetBean implements Serializable {
 
     public void setChauffeurIdForAssignment(Long chauffeurIdForAssignment) {
         this.chauffeurIdForAssignment = chauffeurIdForAssignment;
+    }
+
+    public Trajet getNewTrajet() {
+        return newTrajet;
+    }
+
+    public void setNewTrajet(Trajet newTrajet) {
+        this.newTrajet = newTrajet;
+    }
+
+    public String getDestinationSearch() {
+        return destinationSearch;
+    }
+
+    public void setDestinationSearch(String destinationSearch) {
+        this.destinationSearch = destinationSearch;
+    }
+
+    public String getStatusFilter() {
+        return statusFilter;
+    }
+
+    public void setStatusFilter(String statusFilter) {
+        this.statusFilter = statusFilter;
     }
 }
