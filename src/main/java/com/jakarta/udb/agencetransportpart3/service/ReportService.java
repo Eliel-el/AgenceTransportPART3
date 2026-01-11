@@ -2,17 +2,20 @@ package com.jakarta.udb.agencetransportpart3.service;
 
 import com.jakarta.udb.agencetransportpart3.entity.Reservation;
 import com.jakarta.udb.agencetransportpart3.entity.Trajet;
-import jakarta.ejb.Stateless;
+import com.jakarta.udb.agencetransportpart3.integration.BusServiceClient;
+import com.jakarta.udb.agencetransportpart3.integration.ChauffeurServiceClient;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
 /**
- * Service for generating reports
+ * Service for generating reports (JSON-based persistence)
  */
-@Stateless
+@ApplicationScoped
 public class ReportService {
 
     private static final Logger LOGGER = Logger.getLogger(ReportService.class.getName());
@@ -23,88 +26,126 @@ public class ReportService {
     @Inject
     private TrajetService trajetService;
 
-    /**
-     * Generate a summary report of all reservations and trajets
-     */
+    @Inject
+    private BusServiceClient busServiceClient;
+
+    @Inject
+    private ChauffeurServiceClient chauffeurServiceClient;
+
+    // ==============================
+    // SUMMARY REPORT
+    // ==============================
     public Map<String, Object> generateSummaryReport() {
+
         Map<String, Object> report = new HashMap<>();
 
-        // Reservation statistics
-        long totalReservations = reservationService.findAll().size();
-        long pendingReservations = reservationService.getPendingReservationsCount();
-        long confirmedReservations = reservationService.getConfirmedReservationsCount();
-
+        // Reservations
         Map<String, Long> reservationStats = new HashMap<>();
-        reservationStats.put("total", totalReservations);
-        reservationStats.put("pending", pendingReservations);
-        reservationStats.put("confirmed", confirmedReservations);
+        reservationStats.put("total",
+                (long) reservationService.findAll().size());
+        reservationStats.put("pending",
+                reservationService.getPendingReservationsCount());
+        reservationStats.put("confirmed",
+                reservationService.getConfirmedReservationsCount());
 
         report.put("reservations", reservationStats);
 
-        // Trajet statistics
-        long totalTrajets = trajetService.findAll().size();
-        long plannedTrajets = trajetService.getPlannedTrajetsCount();
-        long completedTrajets = trajetService.getCompletedTrajetsCount();
-
+        // Trajets
         Map<String, Long> trajetStats = new HashMap<>();
-        trajetStats.put("total", totalTrajets);
-        trajetStats.put("planned", plannedTrajets);
-        trajetStats.put("completed", completedTrajets);
+        trajetStats.put("total",
+                (long) trajetService.findAll().size());
+        trajetStats.put("planned",
+                trajetService.getPlannedTrajetsCount());
+        trajetStats.put("completed",
+                trajetService.getCompletedTrajetsCount());
 
         report.put("trajets", trajetStats);
 
-        LOGGER.info("Generated summary report");
+        LOGGER.info("Summary report generated");
         return report;
     }
 
-    /**
-     * Generate detailed report by bus
-     */
-    public Map<Long, List<Trajet>> generateReportByBus() {
-        List<Trajet> allTrajets = trajetService.findAll();
-        Map<Long, List<Trajet>> reportByBus = new HashMap<>();
+    // ==============================
+    // REPORT BY BUS
+    // ==============================
+    public Map<String, List<Trajet>> generateReportByBus() {
+        Map<String, List<Trajet>> report = new HashMap<>();
+        Map<Long, String> busNames = new HashMap<>();
 
-        for (Trajet trajet : allTrajets) {
+        for (Trajet trajet : trajetService.findAll()) {
             if (trajet.getBusId() != null) {
-                reportByBus.computeIfAbsent(trajet.getBusId(), k -> new java.util.ArrayList<>()).add(trajet);
+                String busIdentifier = busNames.get(trajet.getBusId());
+                if (busIdentifier == null) {
+                    try {
+                        String details = busServiceClient.getBusDetails(trajet.getBusId());
+                        if (details != null && details.contains("\"number\":\"")) {
+                            busIdentifier = details.split("\"number\":\"")[1].split("\"")[0];
+                        } else {
+                            busIdentifier = "Bus #" + trajet.getBusId() + " (Indisponible)";
+                        }
+                    } catch (Exception e) {
+                        busIdentifier = "Bus #" + trajet.getBusId() + " (Indisponible)";
+                    }
+                    busNames.put(trajet.getBusId(), busIdentifier);
+                }
+
+                report.computeIfAbsent(
+                        busIdentifier,
+                        k -> new java.util.ArrayList<>()).add(trajet);
             }
         }
 
-        LOGGER.info("Generated report by bus");
-        return reportByBus;
+        LOGGER.info("Report by bus generated");
+        return report;
     }
 
-    /**
-     * Generate detailed report by chauffeur
-     */
-    public Map<Long, List<Trajet>> generateReportByChauffeur() {
-        List<Trajet> allTrajets = trajetService.findAll();
-        Map<Long, List<Trajet>> reportByChauffeur = new HashMap<>();
+    // ==============================
+    // REPORT BY CHAUFFEUR
+    // ==============================
+    public Map<String, List<Trajet>> generateReportByChauffeur() {
+        Map<String, List<Trajet>> report = new HashMap<>();
+        Map<Long, String> chauffeurNames = new HashMap<>();
 
-        for (Trajet trajet : allTrajets) {
+        for (Trajet trajet : trajetService.findAll()) {
             if (trajet.getChauffeurId() != null) {
-                reportByChauffeur.computeIfAbsent(trajet.getChauffeurId(), k -> new java.util.ArrayList<>())
-                        .add(trajet);
+                String chauffeurIdentifier = chauffeurNames.get(trajet.getChauffeurId());
+                if (chauffeurIdentifier == null) {
+                    try {
+                        String details = chauffeurServiceClient.getChauffeurDetails(trajet.getChauffeurId());
+                        if (details != null && details.contains("\"name\":\"")) {
+                            chauffeurIdentifier = details.split("\"name\":\"")[1].split("\"")[0];
+                        } else {
+                            chauffeurIdentifier = "Chauffeur #" + trajet.getChauffeurId() + " (Indisponible)";
+                        }
+                    } catch (Exception e) {
+                        chauffeurIdentifier = "Chauffeur #" + trajet.getChauffeurId() + " (Indisponible)";
+                    }
+                    chauffeurNames.put(trajet.getChauffeurId(), chauffeurIdentifier);
+                }
+
+                report.computeIfAbsent(
+                        chauffeurIdentifier,
+                        k -> new java.util.ArrayList<>()).add(trajet);
             }
         }
 
-        LOGGER.info("Generated report by chauffeur");
-        return reportByChauffeur;
+        LOGGER.info("Report by chauffeur generated");
+        return report;
     }
 
-    /**
-     * Get all reservations with their associated trajets
-     */
+    // ==============================
+    // RESERVATIONS + TRAJETS
+    // ==============================
     public Map<Reservation, Trajet> getReservationsWithTrajets() {
-        List<Reservation> reservations = reservationService.findAll();
+
         Map<Reservation, Trajet> result = new HashMap<>();
 
-        for (Reservation reservation : reservations) {
+        for (Reservation reservation : reservationService.findAll()) {
             Trajet trajet = trajetService.findByReservationId(reservation.getId());
             result.put(reservation, trajet);
         }
 
-        LOGGER.info("Retrieved reservations with trajets");
+        LOGGER.info("Reservations with trajets loaded");
         return result;
     }
 }

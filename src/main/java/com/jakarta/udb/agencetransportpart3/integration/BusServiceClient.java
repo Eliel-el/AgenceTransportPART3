@@ -1,6 +1,8 @@
 package com.jakarta.udb.agencetransportpart3.integration;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.json.bind.Jsonb;
+import jakarta.json.bind.JsonbBuilder;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.WebTarget;
@@ -18,23 +20,20 @@ public class BusServiceClient {
     private static final String BUS_SERVICE_URL = "http://localhost:8080/AgenceTransportPART1/api/bus";
 
     private final Client client;
+    private final Jsonb jsonb;
 
     public BusServiceClient() {
         this.client = ClientBuilder.newClient();
+        this.jsonb = JsonbBuilder.create();
     }
 
     /**
      * Check if a bus is available for a specific date
-     * 
-     * @param busId The bus ID
-     * @param date  The date to check
-     * @return true if available, false otherwise
      */
     public boolean checkBusAvailability(Long busId, String date) {
         if (busId == null || date == null)
             return false;
         try {
-            // Ensure date is in yyyy-MM-dd format if it's a full ISO string
             String formattedDate = date.contains("T") ? date.split("T")[0] : date;
 
             WebTarget target = client.target(BUS_SERVICE_URL)
@@ -46,26 +45,25 @@ public class BusServiceClient {
 
             if (response.getStatus() == 200) {
                 String jsonResponse = response.readEntity(String.class);
+                // Simple check for boolean field in JSON
                 return jsonResponse.contains("\"available\":true");
             }
 
-            LOGGER.warning("Bus service " + busId + " returned status: " + response.getStatus() + " for date "
-                    + formattedDate);
+            LOGGER.warning("Bus availability service returned " + response.getStatus() + " for bus " + busId);
             return false;
 
         } catch (Exception e) {
             LOGGER.severe("Error checking bus availability: " + e.getMessage());
-            return true; // Fallback for demo
+            return false; // Safer fallback: assume not available if service is down
         }
     }
 
     /**
      * Get bus details by ID
-     * 
-     * @param busId The bus ID
-     * @return Bus information as JSON string, or null if not found
      */
     public String getBusDetails(Long busId) {
+        if (busId == null)
+            return null;
         try {
             WebTarget target = client.target(BUS_SERVICE_URL).path(String.valueOf(busId));
             Response response = target.request(MediaType.APPLICATION_JSON).get();
@@ -74,20 +72,17 @@ public class BusServiceClient {
                 return response.readEntity(String.class);
             }
 
-            LOGGER.warning("Bus service returned status: " + response.getStatus());
+            LOGGER.warning("Bus details service returned " + response.getStatus() + " for bus " + busId);
             return null;
 
         } catch (Exception e) {
             LOGGER.severe("Error getting bus details: " + e.getMessage());
-            // Mock response for development/testing
-            return "{\"id\":" + busId + ",\"number\":\"BUS-" + busId + "\",\"capacity\":50}";
+            return null; // Return null so callers can handle "Indisponible"
         }
     }
 
     /**
      * Get all available buses
-     * 
-     * @return List of buses as JSON string
      */
     public String getAvailableBuses() {
         try {
@@ -98,13 +93,23 @@ public class BusServiceClient {
                 return response.readEntity(String.class);
             }
 
-            LOGGER.warning("Bus service returned status: " + response.getStatus());
+            LOGGER.warning("Bus list service returned " + response.getStatus());
             return "[]";
 
         } catch (Exception e) {
             LOGGER.severe("Error getting available buses: " + e.getMessage());
-            // Mock response for development/testing
-            return "[{\"id\":1,\"number\":\"BUS-001\",\"capacity\":50},{\"id\":2,\"number\":\"BUS-002\",\"capacity\":40}]";
+            return "[]";
         }
+    }
+
+    /**
+     * DTO for Bus details if needed for structured binding
+     */
+    public static class BusDTO {
+        public Long id;
+        public String number;
+        public Integer capacity;
+        // getters/setters can be added if needed, or use public fields for simplicity
+        // with Jsonb
     }
 }

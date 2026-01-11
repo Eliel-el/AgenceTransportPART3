@@ -4,24 +4,26 @@ import com.jakarta.udb.agencetransportpart3.entity.Trajet;
 import com.jakarta.udb.agencetransportpart3.entity.Reservation;
 import com.jakarta.udb.agencetransportpart3.integration.BusServiceClient;
 import com.jakarta.udb.agencetransportpart3.integration.ChauffeurServiceClient;
-import jakarta.ejb.Stateless;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
- * Service for managing Trajets (Trips)
+ * Service for managing Trajets (Trips) using JSON persistence
  */
-@Stateless
+@ApplicationScoped
 public class TrajetService {
 
     private static final Logger LOGGER = Logger.getLogger(TrajetService.class.getName());
 
-    @PersistenceContext(unitName = "my_persistence_unit")
-    private EntityManager em;
+    @Inject
+    private JsonPersistenceService persistenceService;
+
+    @Inject
+    private ReservationService reservationService;
 
     @Inject
     private BusServiceClient busServiceClient;
@@ -34,44 +36,65 @@ public class TrajetService {
      */
     public Trajet createTrajet(Long reservationId, Long busId, Long chauffeurId) {
         // Get reservation details
-        Reservation reservation = em.find(Reservation.class, reservationId);
+        Reservation reservation = reservationService.findById(reservationId);
         if (reservation == null) {
             throw new IllegalArgumentException("Reservation not found: " + reservationId);
         }
 
+        List<Trajet> all = findAll();
+
+        // Manual ID generation
+        long nextId = all.stream()
+                .mapToLong(Trajet::getId)
+                .max()
+                .orElse(0L) + 1;
+
         Trajet trajet = new Trajet();
+        trajet.setId(nextId);
         trajet.setReservationId(reservationId);
         trajet.setDepartureLocation(reservation.getDepartureLocation());
         trajet.setDestinationLocation(reservation.getDestinationLocation());
         trajet.setDepartureDate(reservation.getDepartureDate());
         trajet.setStatus("PLANNED");
+        trajet.setCreatedAt(LocalDateTime.now());
+        trajet.setUpdatedAt(LocalDateTime.now());
 
         // Get bus details from Service 1
         if (busId != null) {
             trajet.setBusId(busId);
-            String busDetails = busServiceClient.getBusDetails(busId);
-            if (busDetails != null && busDetails.contains("\"number\":\"")) {
-                String number = busDetails.split("\"number\":\"")[1].split("\"")[0];
-                trajet.setBusNumber(number);
-            } else {
-                trajet.setBusNumber("BUS-" + busId);
+            try {
+                String busDetails = busServiceClient.getBusDetails(busId);
+                if (busDetails != null && busDetails.contains("\"number\":\"")) {
+                    String number = busDetails.split("\"number\":\"")[1].split("\"")[0];
+                    trajet.setBusNumber(number);
+                } else {
+                    trajet.setBusNumber("Bus #" + busId + " (Indisponible)");
+                }
+            } catch (Exception e) {
+                trajet.setBusNumber("Bus #" + busId + " (Indisponible)");
             }
         }
 
         // Get chauffeur details from Service 2
         if (chauffeurId != null) {
             trajet.setChauffeurId(chauffeurId);
-            String chauffeurDetails = chauffeurServiceClient.getChauffeurDetails(chauffeurId);
-            if (chauffeurDetails != null && chauffeurDetails.contains("\"name\":\"")) {
-                String name = chauffeurDetails.split("\"name\":\"")[1].split("\"")[0];
-                trajet.setChauffeurName(name);
-            } else {
-                trajet.setChauffeurName("Driver-" + chauffeurId);
+            try {
+                String chauffeurDetails = chauffeurServiceClient.getChauffeurDetails(chauffeurId);
+                if (chauffeurDetails != null && chauffeurDetails.contains("\"name\":\"")) {
+                    String name = chauffeurDetails.split("\"name\":\"")[1].split("\"")[0];
+                    trajet.setChauffeurName(name);
+                } else {
+                    trajet.setChauffeurName("Chauffeur #" + chauffeurId + " (Indisponible)");
+                }
+            } catch (Exception e) {
+                trajet.setChauffeurName("Chauffeur #" + chauffeurId + " (Indisponible)");
             }
         }
 
-        em.persist(trajet);
-        LOGGER.info("Created trajet: " + trajet.getId());
+        all.add(trajet);
+        persistenceService.saveAll(all, Trajet.class);
+
+        LOGGER.info("Created trajet in JSON: " + trajet.getId());
         return trajet;
     }
 
@@ -79,43 +102,60 @@ public class TrajetService {
      * Find trajet by ID
      */
     public Trajet findById(Long id) {
-        return em.find(Trajet.class, id);
+        return findAll().stream()
+                .filter(t -> t.getId().equals(id))
+                .findFirst()
+                .orElse(null);
     }
 
     /**
      * Get all trajets
      */
     public List<Trajet> findAll() {
-        return em.createNamedQuery("Trajet.findAll", Trajet.class).getResultList();
+        return persistenceService.loadAll(Trajet.class);
     }
 
     /**
      * Get trajets by status
      */
     public List<Trajet> findByStatus(String status) {
-        return em.createNamedQuery("Trajet.findByStatus", Trajet.class)
-                .setParameter("status", status)
-                .getResultList();
+        return findAll().stream()
+                .filter(t -> t.getStatus().equalsIgnoreCase(status))
+                .collect(Collectors.toList());
     }
 
     /**
      * Get trajet by reservation ID
      */
     public Trajet findByReservationId(Long reservationId) {
-        List<Trajet> trajets = em.createNamedQuery("Trajet.findByReservationId", Trajet.class)
-                .setParameter("reservationId", reservationId)
-                .getResultList();
-        return trajets.isEmpty() ? null : trajets.get(0);
+        return findAll().stream()
+                .filter(t -> t.getReservationId().equals(reservationId))
+                .findFirst()
+                .orElse(null);
     }
 
     /**
      * Update trajet
      */
     public Trajet updateTrajet(Trajet trajet) {
+        List<Trajet> all = findAll();
         trajet.setUpdatedAt(LocalDateTime.now());
-        Trajet updated = em.merge(trajet);
-        LOGGER.info("Updated trajet: " + updated.getId());
-        return updated;
+
+        boolean updated = false;
+        for (int i = 0; i < all.size(); i++) {
+            if (all.get(i).getId().equals(trajet.getId())) {
+                all.set(i, trajet);
+                updated = true;
+                break;
+            }
+        }
+
+        if (updated) {
+            persistenceService.saveAll(all, Trajet.class);
+            LOGGER.info("Updated trajet in JSON: " + trajet.getId());
+        }
+
+        return trajet;
     }
 
     /**
@@ -125,8 +165,17 @@ public class TrajetService {
         Trajet trajet = findById(trajetId);
         if (trajet != null) {
             trajet.setBusId(busId);
-            String busDetails = busServiceClient.getBusDetails(busId);
-            trajet.setBusNumber("BUS-" + busId);
+            try {
+                String busDetails = busServiceClient.getBusDetails(busId);
+                if (busDetails != null && busDetails.contains("\"number\":\"")) {
+                    String number = busDetails.split("\"number\":\"")[1].split("\"")[0];
+                    trajet.setBusNumber(number);
+                } else {
+                    trajet.setBusNumber("Bus #" + busId + " (Indisponible)");
+                }
+            } catch (Exception e) {
+                trajet.setBusNumber("Bus #" + busId + " (Indisponible)");
+            }
             updateTrajet(trajet);
             LOGGER.info("Assigned bus " + busId + " to trajet " + trajetId);
         }
@@ -139,8 +188,17 @@ public class TrajetService {
         Trajet trajet = findById(trajetId);
         if (trajet != null) {
             trajet.setChauffeurId(chauffeurId);
-            String chauffeurDetails = chauffeurServiceClient.getChauffeurDetails(chauffeurId);
-            trajet.setChauffeurName("Driver-" + chauffeurId);
+            try {
+                String chauffeurDetails = chauffeurServiceClient.getChauffeurDetails(chauffeurId);
+                if (chauffeurDetails != null && chauffeurDetails.contains("\"name\":\"")) {
+                    String name = chauffeurDetails.split("\"name\":\"")[1].split("\"")[0];
+                    trajet.setChauffeurName(name);
+                } else {
+                    trajet.setChauffeurName("Chauffeur #" + chauffeurId + " (Indisponible)");
+                }
+            } catch (Exception e) {
+                trajet.setChauffeurName("Chauffeur #" + chauffeurId + " (Indisponible)");
+            }
             updateTrajet(trajet);
             LOGGER.info("Assigned chauffeur " + chauffeurId + " to trajet " + trajetId);
         }
@@ -187,10 +245,12 @@ public class TrajetService {
      * Delete a trajet
      */
     public void deleteTrajet(Long id) {
-        Trajet trajet = findById(id);
-        if (trajet != null) {
-            em.remove(trajet);
-            LOGGER.info("Deleted trajet: " + id);
+        List<Trajet> all = findAll();
+        boolean removed = all.removeIf(t -> t.getId().equals(id));
+
+        if (removed) {
+            persistenceService.saveAll(all, Trajet.class);
+            LOGGER.info("Deleted trajet from JSON: " + id);
         }
     }
 
@@ -198,15 +258,17 @@ public class TrajetService {
      * Get planned trajets count
      */
     public long getPlannedTrajetsCount() {
-        return em.createQuery("SELECT COUNT(t) FROM Trajet t WHERE t.status = 'PLANNED'", Long.class)
-                .getSingleResult();
+        return findAll().stream()
+                .filter(t -> "PLANNED".equalsIgnoreCase(t.getStatus()))
+                .count();
     }
 
     /**
      * Get completed trajets count
      */
     public long getCompletedTrajetsCount() {
-        return em.createQuery("SELECT COUNT(t) FROM Trajet t WHERE t.status = 'COMPLETED'", Long.class)
-                .getSingleResult();
+        return findAll().stream()
+                .filter(t -> "COMPLETED".equalsIgnoreCase(t.getStatus()))
+                .count();
     }
 }

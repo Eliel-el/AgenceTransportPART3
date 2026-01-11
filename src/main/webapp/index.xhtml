@@ -1,164 +1,82 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="jakarta.faces.html">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="jakarta.faces.html" xmlns:ui="jakarta.faces.facelets">
+<ui:composition template="template.xhtml">
+    <ui:define name="title">Accueil - Agence Transport</ui:define>
+    <ui:define name="css">
+        <style>
+            .hero-section {
+                text-align: center;
+                padding: 3rem 0;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 15px;
+                color: white;
+                margin-bottom: 2rem;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            }
 
-<h:head>
-    <title>Accueil - Agence Transport</title>
+            .cards {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 2rem;
+                margin-bottom: 3rem;
+            }
 
-    <style>
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            margin: 0;
-            padding: 0;
-        }
+            .feature-icon {
+                font-size: 3rem;
+                margin-bottom: 1rem;
+            }
+        </style>
+    </ui:define>
 
-        .container {
-            max-width: 1100px;
-            margin: auto;
-            padding: 40px 20px;
-        }
-
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 40px;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-            transition: transform 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-8px);
-        }
-
-        .icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-        }
-
-        .card h3 {
-            margin-bottom: 10px;
-            color: #2d3748;
-        }
-
-        .card p {
-            color: #718096;
-            margin-bottom: 25px;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 12px 25px;
-            background: #667eea;
-            color: white;
-            border-radius: 30px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-
-        .btn:hover {
-            background: #5a67d8;
-        }
-
-        .features {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-top: 50px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-        }
-
-        .features h2 {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .features ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .features li {
-            padding: 12px 0;
-            border-bottom: 1px solid #eee;
-            font-size: 1rem;
-        }
-    </style>
-</h:head>
-
-<h:body>
-
-    <div class="container">
-
-        <div class="header">
+    <ui:define name="content">
+        <div class="hero-section">
             <h1>Bienvenue 🚍</h1>
             <p>Système de gestion des réservations et trajets de transport</p>
         </div>
 
         <div class="cards">
-
-            <div class="card">
-                <div class="icon">📋</div>
+            <div class="card text-center">
+                <div class="feature-icon">📋</div>
                 <h3>Réservations</h3>
                 <p>Enregistrez et gérez les réservations des clients.</p>
-
-                <h:link value="Accéder" outcome="reservation" styleClass="btn" />
+                <h:link value="Accéder" outcome="reservations" styleClass="btn btn-primary rounded-pill px-4" />
             </div>
 
-            <div class="card">
-                <div class="icon">🚍</div>
+            <div class="card text-center">
+                <div class="feature-icon">🚍</div>
                 <h3>Trajets</h3>
                 <p>Organisez les trajets avec bus et chauffeurs.</p>
-
-                <h:link value="Organiser" outcome="trajet" styleClass="btn" />
+                <h:link value="Organiser" outcome="trajets" styleClass="btn btn-primary rounded-pill px-4" />
             </div>
 
-            <div class="card">
-                <div class="icon">📊</div>
+            <div class="card text-center">
+                <div class="feature-icon">📊</div>
                 <h3>Rapports</h3>
                 <p>Consultez les statistiques et rapports détaillés.</p>
-
-                <h:link value="Consulter" outcome="report" styleClass="btn" />
+                <h:link value="Consulter" outcome="reports" styleClass="btn btn-primary rounded-pill px-4" />
             </div>
-
         </div>
 
-        <div class="features">
+        <div class="card">
             <h2>Fonctionnalités principales</h2>
-            <ul>
-                <li>✅ Enregistrement des réservations</li>
-                <li>✅ Vérification disponibilité des bus</li>
-                <li>✅ Vérification disponibilité des chauffeurs</li>
-                <li>✅ Gestion et confirmation des trajets</li>
-                <li>✅ Génération de rapports</li>
-            </ul>
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">✅ Enregistrement des réservations</li>
+                        <li class="list-group-item">✅ Vérification disponibilité des bus</li>
+                        <li class="list-group-item">✅ Vérification disponibilité des chauffeurs</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">✅ Gestion et confirmation des trajets</li>
+                        <li class="list-group-item">✅ Génération de rapports</li>
+                        <li class="list-group-item">✅ Persistance JSON</li>
+                    </ul>
+                </div>
+            </div>
         </div>
-
-    </div>
-
-</h:body>
+    </ui:define>
+</ui:composition>
 
 </html>

@@ -1,6 +1,8 @@
 package com.jakarta.udb.agencetransportpart3.bean;
 
 import com.jakarta.udb.agencetransportpart3.entity.Reservation;
+import com.jakarta.udb.agencetransportpart3.integration.BusServiceClient;
+import com.jakarta.udb.agencetransportpart3.integration.ChauffeurServiceClient;
 import com.jakarta.udb.agencetransportpart3.service.ReservationService;
 import com.jakarta.udb.agencetransportpart3.service.TrajetService;
 import jakarta.annotation.PostConstruct;
@@ -28,9 +30,19 @@ public class ReservationBean implements Serializable {
     @Inject
     private TrajetService trajetService;
 
+    @Inject
+    private BusServiceClient busServiceClient;
+
+    @Inject
+    private ChauffeurServiceClient chauffeurServiceClient;
+
     private List<Reservation> reservations;
     private Reservation selectedReservation;
     private Reservation newReservation;
+
+    // Available resources from external Service 1 and 2
+    private List<java.util.Map<String, String>> availableBuses;
+    private List<java.util.Map<String, String>> availableChauffeurs;
 
     // Form fields
     private String passengerName;
@@ -109,21 +121,99 @@ public class ReservationBean implements Serializable {
     }
 
     /**
+     * Prepare confirmation by loading available resources
+     */
+    public void prepareConfirm(Reservation reservation) {
+        this.selectedReservation = reservation;
+        loadAvailableBuses();
+        loadAvailableChauffeurs();
+    }
+
+    private void loadAvailableBuses() {
+        availableBuses = new java.util.ArrayList<>();
+        try {
+            String json = busServiceClient.getAvailableBuses();
+            // Simple manual parsing for demo purposes
+            // In production, use JSON-B
+            if (json != null && json.startsWith("[")) {
+                String[] items = json.substring(1, json.length() - 1).split("\\},\\{");
+                for (String item : items) {
+                    java.util.Map<String, String> bus = new java.util.HashMap<>();
+                    String id = extractValue(item, "id");
+                    String number = extractValue(item, "number");
+                    bus.put("id", id);
+                    bus.put("label", number + " (ID: " + id + ")");
+                    availableBuses.add(bus);
+                }
+            }
+        } catch (Exception e) {
+            // Log error
+        }
+    }
+
+    private void loadAvailableChauffeurs() {
+        availableChauffeurs = new java.util.ArrayList<>();
+        try {
+            String json = chauffeurServiceClient.getAvailableChauffeurs();
+            if (json != null && json.startsWith("[")) {
+                String[] items = json.substring(1, json.length() - 1).split("\\},\\{");
+                for (String item : items) {
+                    java.util.Map<String, String> chauffeur = new java.util.HashMap<>();
+                    String id = extractValue(item, "id");
+                    String name = extractValue(item, "name");
+                    chauffeur.put("id", id);
+                    chauffeur.put("label", name + " (ID: " + id + ")");
+                    availableChauffeurs.add(chauffeur);
+                }
+            }
+        } catch (Exception e) {
+            // Log error
+        }
+    }
+
+    private String extractValue(String item, String key) {
+        try {
+            String search = "\"" + key + "\":";
+            int start = item.indexOf(search);
+            if (start == -1)
+                return "";
+            start += search.length();
+
+            if (item.charAt(start) == '"') {
+                start++;
+                int end = item.indexOf("\"", start);
+                return item.substring(start, end);
+            } else {
+                int end = item.indexOf(",", start);
+                if (end == -1)
+                    end = item.indexOf("}", start);
+                if (end == -1)
+                    end = item.length();
+                return item.substring(start, end).trim();
+            }
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    /**
      * Confirm a reservation
      */
-    public String confirmReservation(Long reservationId) {
+    public String confirmReservation() {
         try {
-            // For now, use default IDs (1 for bus, 1 for chauffeur)
-            // In a real app, these would be selected from dropdowns
+            if (selectedReservation == null)
+                return null;
+
+            Long reservationId = selectedReservation.getId();
             boolean confirmed = reservationService.confirmReservation(reservationId,
-                    busIdForConfirmation != null ? busIdForConfirmation : 1L,
-                    chauffeurIdForConfirmation != null ? chauffeurIdForConfirmation : 1L);
+                    busIdForConfirmation,
+                    chauffeurIdForConfirmation);
 
             if (confirmed) {
                 // Create trajet for this reservation
                 trajetService.createTrajet(reservationId,
-                        busIdForConfirmation != null ? busIdForConfirmation : 1L,
-                        chauffeurIdForConfirmation != null ? chauffeurIdForConfirmation : 1L);
+                        busIdForConfirmation,
+                        chauffeurIdForConfirmation);
 
                 addMessage(FacesMessage.SEVERITY_INFO, "Success", "Reservation confirmed and trip created!");
             } else {
@@ -132,6 +222,7 @@ public class ReservationBean implements Serializable {
             }
 
             loadReservations();
+            selectedReservation = null;
             return "reservations?faces-redirect=true";
         } catch (Exception e) {
             addMessage(FacesMessage.SEVERITY_ERROR, "Error", "Failed to confirm reservation: " + e.getMessage());
@@ -284,5 +375,21 @@ public class ReservationBean implements Serializable {
 
     public void setChauffeurIdForConfirmation(Long chauffeurIdForConfirmation) {
         this.chauffeurIdForConfirmation = chauffeurIdForConfirmation;
+    }
+
+    public List<java.util.Map<String, String>> getAvailableBuses() {
+        return availableBuses;
+    }
+
+    public void setAvailableBuses(List<java.util.Map<String, String>> availableBuses) {
+        this.availableBuses = availableBuses;
+    }
+
+    public List<java.util.Map<String, String>> getAvailableChauffeurs() {
+        return availableChauffeurs;
+    }
+
+    public void setAvailableChauffeurs(List<java.util.Map<String, String>> availableChauffeurs) {
+        this.availableChauffeurs = availableChauffeurs;
     }
 }

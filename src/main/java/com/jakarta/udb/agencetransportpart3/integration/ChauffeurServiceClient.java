@@ -1,6 +1,8 @@
 package com.jakarta.udb.agencetransportpart3.integration;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.json.bind.Jsonb;
+import jakarta.json.bind.JsonbBuilder;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.WebTarget;
@@ -18,23 +20,20 @@ public class ChauffeurServiceClient {
     private static final String CHAUFFEUR_SERVICE_URL = "http://localhost:8080/AgenceTransportPART2/api/chauffeurs";
 
     private final Client client;
+    private final Jsonb jsonb;
 
     public ChauffeurServiceClient() {
         this.client = ClientBuilder.newClient();
+        this.jsonb = JsonbBuilder.create();
     }
 
     /**
      * Check if a chauffeur is available for a specific date
-     * 
-     * @param chauffeurId The chauffeur ID
-     * @param date        The date to check
-     * @return true if available, false otherwise
      */
     public boolean checkChauffeurAvailability(Long chauffeurId, String date) {
         if (chauffeurId == null || date == null)
             return false;
         try {
-            // Ensure date is in yyyy-MM-dd format if it's a full ISO string
             String formattedDate = date.contains("T") ? date.split("T")[0] : date;
 
             WebTarget target = client.target(CHAUFFEUR_SERVICE_URL)
@@ -49,23 +48,22 @@ public class ChauffeurServiceClient {
                 return jsonResponse.contains("\"available\":true");
             }
 
-            LOGGER.warning("Chauffeur service " + chauffeurId + " returned status: " + response.getStatus()
-                    + " for date " + formattedDate);
+            LOGGER.warning("Chauffeur availability service returned " + response.getStatus() + " for chauffeur "
+                    + chauffeurId);
             return false;
 
         } catch (Exception e) {
             LOGGER.severe("Error checking chauffeur availability: " + e.getMessage());
-            return true; // Fallback for demo
+            return false; // Safer fallback: assume not available if service is down
         }
     }
 
     /**
      * Get chauffeur details by ID
-     * 
-     * @param chauffeurId The chauffeur ID
-     * @return Chauffeur information as JSON string, or null if not found
      */
     public String getChauffeurDetails(Long chauffeurId) {
+        if (chauffeurId == null)
+            return null;
         try {
             WebTarget target = client.target(CHAUFFEUR_SERVICE_URL).path(String.valueOf(chauffeurId));
             Response response = target.request(MediaType.APPLICATION_JSON).get();
@@ -74,21 +72,18 @@ public class ChauffeurServiceClient {
                 return response.readEntity(String.class);
             }
 
-            LOGGER.warning("Chauffeur service returned status: " + response.getStatus());
+            LOGGER.warning(
+                    "Chauffeur details service returned " + response.getStatus() + " for chauffeur " + chauffeurId);
             return null;
 
         } catch (Exception e) {
             LOGGER.severe("Error getting chauffeur details: " + e.getMessage());
-            // Mock response for development/testing
-            return "{\"id\":" + chauffeurId + ",\"name\":\"Driver-" + chauffeurId + "\",\"license\":\"LIC-"
-                    + chauffeurId + "\"}";
+            return null; // Return null so callers can handle "Indisponible"
         }
     }
 
     /**
      * Get all available chauffeurs
-     * 
-     * @return List of chauffeurs as JSON string
      */
     public String getAvailableChauffeurs() {
         try {
@@ -99,13 +94,23 @@ public class ChauffeurServiceClient {
                 return response.readEntity(String.class);
             }
 
-            LOGGER.warning("Chauffeur service returned status: " + response.getStatus());
+            LOGGER.warning("Chauffeur list service returned " + response.getStatus());
             return "[]";
 
         } catch (Exception e) {
             LOGGER.severe("Error getting available chauffeurs: " + e.getMessage());
-            // Mock response for development/testing
-            return "[{\"id\":1,\"name\":\"Jean Dupont\",\"license\":\"LIC-001\"},{\"id\":2,\"name\":\"Marie Martin\",\"license\":\"LIC-002\"}]";
+            return "[]";
         }
+    }
+
+    /**
+     * DTO for Chauffeur details if needed for structured binding
+     */
+    public static class ChauffeurDTO {
+        public Long id;
+        public String name;
+        public String license;
+        // getters/setters can be added if needed, or use public fields for simplicity
+        // with Jsonb
     }
 }

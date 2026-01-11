@@ -21,8 +21,8 @@ public class ReportBean {
     private ReportService reportService;
 
     private Map<String, Object> summaryReport;
-    private Map<Long, List<Trajet>> reportByBus;
-    private Map<Long, List<Trajet>> reportByChauffeur;
+    private Map<String, List<Trajet>> reportByBus;
+    private Map<String, List<Trajet>> reportByChauffeur;
     private Map<Reservation, Trajet> reservationsWithTrajets;
 
     @PostConstruct
@@ -67,25 +67,25 @@ public class ReportBean {
         this.summaryReport = summaryReport;
     }
 
-    public Map<Long, List<Trajet>> getReportByBus() {
+    public Map<String, List<Trajet>> getReportByBus() {
         if (reportByBus == null) {
             loadReportByBus();
         }
         return reportByBus;
     }
 
-    public void setReportByBus(Map<Long, List<Trajet>> reportByBus) {
+    public void setReportByBus(Map<String, List<Trajet>> reportByBus) {
         this.reportByBus = reportByBus;
     }
 
-    public Map<Long, List<Trajet>> getReportByChauffeur() {
+    public Map<String, List<Trajet>> getReportByChauffeur() {
         if (reportByChauffeur == null) {
             loadReportByChauffeur();
         }
         return reportByChauffeur;
     }
 
-    public void setReportByChauffeur(Map<Long, List<Trajet>> reportByChauffeur) {
+    public void setReportByChauffeur(Map<String, List<Trajet>> reportByChauffeur) {
         this.reportByChauffeur = reportByChauffeur;
     }
 

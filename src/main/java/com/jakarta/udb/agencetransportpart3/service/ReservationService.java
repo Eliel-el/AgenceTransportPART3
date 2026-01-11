@@ -3,24 +3,22 @@ package com.jakarta.udb.agencetransportpart3.service;
 import com.jakarta.udb.agencetransportpart3.entity.Reservation;
 import com.jakarta.udb.agencetransportpart3.integration.BusServiceClient;
 import com.jakarta.udb.agencetransportpart3.integration.ChauffeurServiceClient;
-import jakarta.ejb.Stateless;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
-/**
- * Service for managing Reservations
- */
-@Stateless
+@ApplicationScoped
 public class ReservationService {
 
-    private static final Logger LOGGER = Logger.getLogger(ReservationService.class.getName());
+    private static final Logger LOGGER =
+            Logger.getLogger(ReservationService.class.getName());
 
-    @PersistenceContext(unitName = "my_persistence_unit")
-    private EntityManager em;
+    @Inject
+    private JsonPersistenceService persistenceService;
 
     @Inject
     private BusServiceClient busServiceClient;
@@ -28,122 +26,142 @@ public class ReservationService {
     @Inject
     private ChauffeurServiceClient chauffeurServiceClient;
 
-    /**
-     * Create a new reservation
-     */
+    // ==============================
+    // FIND ALL
+    // ==============================
+    public List<Reservation> findAll() {
+        return persistenceService.loadAll(Reservation.class);
+    }
+
+    // ==============================
+    // CREATE
+    // ==============================
     public Reservation createReservation(Reservation reservation) {
+
+        List<Reservation> all = findAll();
+
+        long nextId = all.stream()
+                .mapToLong(Reservation::getId)
+                .max()
+                .orElse(0L) + 1;
+
+        reservation.setId(nextId);
         reservation.setStatus("PENDING");
         reservation.setCreatedAt(LocalDateTime.now());
         reservation.setUpdatedAt(LocalDateTime.now());
-        em.persist(reservation);
-        LOGGER.info("Created reservation: " + reservation.getId());
+
+        all.add(reservation);
+        persistenceService.saveAll(all, Reservation.class);
+
+        LOGGER.info("Reservation created: " + nextId);
         return reservation;
     }
 
-    /**
-     * Find reservation by ID
-     */
+    // ==============================
+    // FIND BY ID
+    // ==============================
     public Reservation findById(Long id) {
-        return em.find(Reservation.class, id);
+        return findAll().stream()
+                .filter(r -> r.getId().equals(id))
+                .findFirst()
+                .orElse(null);
     }
 
-    /**
-     * Get all reservations
-     */
-    public List<Reservation> findAll() {
-        return em.createNamedQuery("Reservation.findAll", Reservation.class).getResultList();
-    }
-
-    /**
-     * Get reservations by status
-     */
-    public List<Reservation> findByStatus(String status) {
-        return em.createNamedQuery("Reservation.findByStatus", Reservation.class)
-                .setParameter("status", status)
-                .getResultList();
-    }
-
-    /**
-     * Update reservation
-     */
+    // ==============================
+    // UPDATE
+    // ==============================
     public Reservation updateReservation(Reservation reservation) {
+
+        List<Reservation> all = findAll();
         reservation.setUpdatedAt(LocalDateTime.now());
-        Reservation updated = em.merge(reservation);
-        LOGGER.info("Updated reservation: " + updated.getId());
-        return updated;
+
+        for (int i = 0; i < all.size(); i++) {
+            if (all.get(i).getId().equals(reservation.getId())) {
+                all.set(i, reservation);
+                persistenceService.saveAll(all, Reservation.class);
+                LOGGER.info("Reservation updated: " + reservation.getId());
+                return reservation;
+            }
+        }
+
+        LOGGER.warning("Reservation not found for update: " + reservation.getId());
+        return null;
     }
 
-    /**
-     * Confirm a reservation (check availability with external services)
-     */
-    public boolean confirmReservation(Long reservationId, Long busId, Long chauffeurId) {
+    // ==============================
+    // FIND BY STATUS
+    // ==============================
+    public List<Reservation> findByStatus(String status) {
+        return findAll().stream()
+                .filter(r -> r.getStatus().equalsIgnoreCase(status))
+                .collect(Collectors.toList());
+    }
+
+    // ==============================
+    // CONFIRM
+    // ==============================
+    public boolean confirmReservation(Long reservationId,
+                                      Long busId,
+                                      Long chauffeurId) {
+
         Reservation reservation = findById(reservationId);
         if (reservation == null) {
-            LOGGER.warning("Reservation not found: " + reservationId);
             return false;
         }
 
-        // Check bus availability
         String dateStr = reservation.getDepartureDate().toString();
-        boolean busAvailable = busServiceClient.checkBusAvailability(busId, dateStr);
 
-        if (!busAvailable) {
-            LOGGER.warning("Bus not available: " + busId);
+        if (!busServiceClient.checkBusAvailability(busId, dateStr)) {
             return false;
         }
 
-        // Check chauffeur availability
-        boolean chauffeurAvailable = chauffeurServiceClient.checkChauffeurAvailability(chauffeurId, dateStr);
-
-        if (!chauffeurAvailable) {
-            LOGGER.warning("Chauffeur not available: " + chauffeurId);
+        if (!chauffeurServiceClient.checkChauffeurAvailability(chauffeurId, dateStr)) {
             return false;
         }
 
-        // Confirm reservation
         reservation.setStatus("CONFIRMED");
         updateReservation(reservation);
 
-        LOGGER.info("Confirmed reservation: " + reservationId);
+        LOGGER.info("Reservation confirmed: " + reservationId);
         return true;
     }
 
-    /**
-     * Cancel a reservation
-     */
+    // ==============================
+    // CANCEL
+    // ==============================
     public void cancelReservation(Long id) {
         Reservation reservation = findById(id);
         if (reservation != null) {
             reservation.setStatus("CANCELLED");
             updateReservation(reservation);
-            LOGGER.info("Cancelled reservation: " + id);
         }
     }
 
-    /**
-     * Delete a reservation
-     */
+    // ==============================
+    // DELETE
+    // ==============================
     public void deleteReservation(Long id) {
-        Reservation reservation = findById(id);
-        if (reservation != null) {
-            em.remove(reservation);
-            LOGGER.info("Deleted reservation: " + id);
+        List<Reservation> all = findAll();
+        boolean removed = all.removeIf(r -> r.getId().equals(id));
+
+        if (removed) {
+            persistenceService.saveAll(all, Reservation.class);
+            LOGGER.info("Reservation deleted: " + id);
         }
     }
 
-    /**
-     * Get pending reservations count
-     */
+    // ==============================
+    // STATS
+    // ==============================
     public long getPendingReservationsCount() {
-        return em.createQuery("SELECT COUNT(r) FROM Reservation r WHERE r.status = 'PENDING'", Long.class)
-                .getSingleResult();
+        return findAll().stream()
+                .filter(r -> "PENDING".equalsIgnoreCase(r.getStatus()))
+                .count();
     }
 
-    /**
-     * Get confirmed reservations count
-     */
     public long getConfirmedReservationsCount() {
-        return em.createQuery("SELECT COUNT(r) FROM Reservation r WHERE r.status = 'CONFIRMED'", Long.class)
-                .getSingleResult();
+        return findAll().stream()
+                .filter(r -> "CONFIRMED".equalsIgnoreCase(r.getStatus()))
+                .count();
     }
 }

@@ -1,105 +1,66 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="jakarta.faces.html" xmlns:f="jakarta.faces.core">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="jakarta.faces.html" xmlns:f="jakarta.faces.core"
+    xmlns:ui="jakarta.faces.facelets">
+<ui:composition template="template.xhtml">
+    <ui:define name="title">Trajets - Agence Transport</ui:define>
 
-<h:head>
-    <title>Trajets</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #edf2f7;
-            margin: 0;
-        }
+    <ui:define name="content">
+        <div class="card mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>🚍 Gestion des Trajets</h2>
+                <h:form>
+                    <h:commandButton action="#{trajetBean.loadTrajets}" value="Actualiser"
+                        styleClass="btn btn-outline-primary btn-sm rounded-pill" />
+                </h:form>
+            </div>
 
-        .container {
-            max-width: 900px;
-            margin: auto;
-            padding: 40px 20px;
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #2d3748;
-        }
-
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        select,
-        input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-        }
-
-        .btn {
-            background: #48bb78;
-            color: white;
-            padding: 12px 25px;
-            border-radius: 30px;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .btn:hover {
-            background: #38a169;
-        }
-
-        .back {
-            margin-top: 20px;
-            display: inline-block;
-            text-decoration: none;
-            color: white;
-            background: #a0aec0;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-
-        .back:hover {
-            background: #718096;
-        }
-    </style>
-</h:head>
-
-<h:body>
-    <div class="container">
-        <h1>🚍 Gestion des Trajets</h1>
-
-        <div class="card">
-            <h:form>
-                <label>Ville de départ</label>
-                <h:inputText />
-
-                <label>Ville d'arrivée</label>
-                <h:inputText />
-
-                <label>Bus</label>
-                <h:selectOneMenu>
-                    <f:selectItem itemLabel="Bus 01" />
-                    <f:selectItem itemLabel="Bus 02" />
-                </h:selectOneMenu>
-
-                <label>Chauffeur</label>
-                <h:selectOneMenu>
-                    <f:selectItem itemLabel="Chauffeur A" />
-                    <f:selectItem itemLabel="Chauffeur B" />
-                </h:selectOneMenu>
-
-                <h:commandButton value="Créer le trajet" styleClass="btn" />
-            </h:form>
+            <div class="table-container">
+                <h:dataTable value="#{trajetBean.trajets}" var="t" styleClass="w-100">
+                    <h:column>
+                        <f:facet name="header">ID</f:facet>
+                        #{t.id}
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">Itinéraire</f:facet>
+                        <div class="fw-bold">#{t.departureLocation} → #{t.destinationLocation}</div>
+                        <small class="text-muted">Départ: #{t.departureDate}</small>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">Ressources</f:facet>
+                        <div><small>Bus: #{t.busNumber}</small></div>
+                        <div><small>Chauffeur: #{t.chauffeurName}</small></div>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">Statut</f:facet>
+                        <span class="badge #{t.status == 'PLANNED' ? 'badge-info' : 
+                                          t.status == 'IN_PROGRESS' ? 'badge-warning' : 
+                                          t.status == 'COMPLETED' ? 'badge-success' : 'badge-danger'}">
+                            #{t.status}
+                        </span>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">Actions</f:facet>
+                        <h:form styleClass="d-inline">
+                            <h:commandLink action="#{trajetBean.startTrajet(t.id)}"
+                                styleClass="btn btn-sm btn-outline-primary me-1" rendered="#{t.status == 'PLANNED'}">
+                                Démarrer
+                            </h:commandLink>
+                            <h:commandLink action="#{trajetBean.completeTrajet(t.id)}"
+                                styleClass="btn btn-sm btn-outline-success me-1"
+                                rendered="#{t.status == 'IN_PROGRESS'}">
+                                Terminer
+                            </h:commandLink>
+                            <h:commandLink action="#{trajetBean.cancelTrajet(t.id)}"
+                                styleClass="btn btn-sm btn-outline-danger"
+                                rendered="#{t.status == 'PLANNED' or t.status == 'IN_PROGRESS'}">
+                                Annuler
+                            </h:commandLink>
+                        </h:form>
+                    </h:column>
+                </h:dataTable>
+            </div>
         </div>
-
-        <h:link outcome="home" styleClass="back">⬅ Retour à l'accueil</h:link>
-    </div>
-</h:body>
+    </ui:define>
+</ui:composition>
 
 </html>
