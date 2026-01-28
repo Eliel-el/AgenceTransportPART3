@@ -4,6 +4,7 @@
 - **URL de base** : `http://localhost:8080/AgenceTransportPART3/api`
 - **Host** : Modifiable dans `application.properties`
 - **Format** : JSON
+- **Configuration REST** : `JakartaRestConfiguration.java` avec `@ApplicationPath("api")`
 
 ---
 
@@ -290,11 +291,11 @@ POST /api/chauffeurs/{id}/liberer
 
 ---
 
-## 🔧 SYSTÈME - `/jakartaee10`
+## 🔧 SYSTÈME - `/api/jakartaee10`
 
 ### 1. Test de connectivité
 ```
-GET /jakartaee10
+GET /api/jakartaee10
 ```
 **Réponse** : 200 OK - "ping Jakarta EE"
 
@@ -336,7 +337,7 @@ GET /jakartaee10
 | | DELETE | `/api/chauffeurs/{id}` | Supprimer |
 | | POST | `/api/chauffeurs/assigner` | Assigner |
 | | POST | `/api/chauffeurs/{id}/liberer` | Libérer |
-| **Système** | GET | `/jakartaee10` | Ping |
+| **Système** | GET | `/api/jakartaee10` | Ping |
 
 ---
 
