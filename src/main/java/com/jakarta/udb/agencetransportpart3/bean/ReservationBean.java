@@ -178,8 +178,15 @@ public class ReservationBean implements Serializable {
                     java.util.Map<String, String> bus = new java.util.HashMap<>();
                     String id = extractValue(item, "id");
                     String number = extractValue(item, "number");
+                    String isTest = extractValue(item, "isTest");
+
+                    String label = number + " (ID: " + id + ")";
+                    if ("true".equals(isTest)) {
+                        label += " \uD83E\uDDEA TEST"; // 🧪 emoji
+                    }
+
                     bus.put("id", id);
-                    bus.put("label", number + " (ID: " + id + ")");
+                    bus.put("label", label);
                     availableBuses.add(bus);
                 }
             }
@@ -198,8 +205,15 @@ public class ReservationBean implements Serializable {
                     java.util.Map<String, String> chauffeur = new java.util.HashMap<>();
                     String id = extractValue(item, "id");
                     String name = extractValue(item, "name");
+                    String isTest = extractValue(item, "isTest");
+
+                    String label = name + " (ID: " + id + ")";
+                    if ("true".equals(isTest)) {
+                        label += " \uD83E\uDDEA TEST"; // 🧪 emoji
+                    }
+
                     chauffeur.put("id", id);
-                    chauffeur.put("label", name + " (ID: " + id + ")");
+                    chauffeur.put("label", label);
                     availableChauffeurs.add(chauffeur);
                 }
             }

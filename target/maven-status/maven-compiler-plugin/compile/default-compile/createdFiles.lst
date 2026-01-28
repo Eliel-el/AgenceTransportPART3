@@ -1,9 +1,5 @@
-com\jakarta\udb\agencetransportpart3\service\TrajetService.class
 com\jakarta\udb\agencetransportpart3\api\ReportResource.class
-com\jakarta\udb\agencetransportpart3\Database.class
 com\jakarta\udb\agencetransportpart3\entity\Trajet.class
-com\jakarta\udb\agencetransportpart3\service\ReservationService.class
-com\jakarta\udb\agencetransportpart3\bean\ReportBean.class
 com\jakarta\udb\agencetransportpart3\resources\JakartaEE10Resource.class
 com\jakarta\udb\agencetransportpart3\entity\Reservation.class
 com\jakarta\udb\agencetransportpart3\integration\BusServiceClient.class
@@ -14,5 +10,9 @@ com\jakarta\udb\agencetransportpart3\bean\TrajetBean.class
 NavigationController.class
 com\jakarta\udb\agencetransportpart3\api\ReservationResource.class
 com\jakarta\udb\agencetransportpart3\JakartaRestConfiguration.class
-com\jakarta\udb\agencetransportpart3\integration\ChauffeurServiceClient.class
 com\jakarta\udb\agencetransportpart3\service\JsonPersistenceService.class
+com\jakarta\udb\agencetransportpart3\service\TrajetService.class
+com\jakarta\udb\agencetransportpart3\Database.class
+com\jakarta\udb\agencetransportpart3\service\ReservationService.class
+com\jakarta\udb\agencetransportpart3\bean\ReportBean.class
+com\jakarta\udb\agencetransportpart3\integration\ChauffeurServiceClient.class
