@@ -2,6 +2,7 @@ package com.jakarta.udb.agencetransportpart3.integration;
 
 import com.jakarta.udb.agencetransportpart3.entity.LocalBus;
 import com.jakarta.udb.agencetransportpart3.service.LocalResourceService;
+import com.jakarta.udb.agencetransportpart3.config.ServiceConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.json.bind.Jsonb;
@@ -25,13 +26,16 @@ import java.util.logging.Logger;
 public class BusServiceClient {
 
     private static final Logger LOGGER = Logger.getLogger(BusServiceClient.class.getName());
-    private static final String BUS_SERVICE_URL = "http://localhost:8080/AgenceTransportPART1/api/bus";
+    // Use ServiceConfig to read target URL so it can point to the local API
 
     private final Client client;
     private final Jsonb jsonb;
 
     @Inject
     private LocalResourceService localResourceService;
+
+    @Inject
+    private ServiceConfig serviceConfig;
 
     public BusServiceClient() {
         this.client = ClientBuilder.newClient();
@@ -55,7 +59,7 @@ public class BusServiceClient {
         try {
             String formattedDate = date.contains("T") ? date.split("T")[0] : date;
 
-            WebTarget target = client.target(BUS_SERVICE_URL)
+                WebTarget target = client.target(serviceConfig.getBusServiceUrl())
                     .path(String.valueOf(busId))
                     .path("availability")
                     .queryParam("date", formattedDate);
@@ -95,7 +99,7 @@ public class BusServiceClient {
 
         // Otherwise, get from external service
         try {
-            WebTarget target = client.target(BUS_SERVICE_URL).path(String.valueOf(busId));
+            WebTarget target = client.target(serviceConfig.getBusServiceUrl()).path(String.valueOf(busId));
             Response response = target.request(MediaType.APPLICATION_JSON).get();
 
             if (response.getStatus() == 200) {
@@ -129,7 +133,7 @@ public class BusServiceClient {
 
         // Try to add external buses
         try {
-            WebTarget target = client.target(BUS_SERVICE_URL).queryParam("available", true);
+            WebTarget target = client.target(serviceConfig.getBusServiceUrl()).queryParam("available", true);
             Response response = target.request(MediaType.APPLICATION_JSON).get();
 
             if (response.getStatus() == 200) {

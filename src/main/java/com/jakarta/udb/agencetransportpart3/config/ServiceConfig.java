@@ -45,7 +45,7 @@ public class ServiceConfig {
      */
     private void setDefaultValues() {
         properties.setProperty("chauffeur.service.url", "http://localhost:8080/AgenceTransportPART2/api/chauffeurs");
-        properties.setProperty("bus.service.url", "http://localhost:9090/AgenceTransportPART4/api/bus");
+        properties.setProperty("bus.service.url", "http://localhost:8080/servicegestionbus/api/bus");
         properties.setProperty("chauffeur.service.timeout", "5000");
         properties.setProperty("bus.service.timeout", "5000");
     }
@@ -61,7 +61,7 @@ public class ServiceConfig {
      * Obtient l'URL du service de bus
      */
     public String getBusServiceUrl() {
-        return properties.getProperty("bus.service.url", "http://localhost:9090/AgenceTransportPART4/api/bus");
+        return properties.getProperty("bus.service.url", "http://localhost:8080/servicegestionbus/api/bus");
     }
     
     /**

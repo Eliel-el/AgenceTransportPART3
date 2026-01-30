@@ -24,8 +24,6 @@ public class TrajetService {
     @Inject
     private JsonPersistenceService persistenceService;
 
-    private final Jsonb jsonb = JsonbBuilder.create();
-
     @Inject
     private ReservationService reservationService;
 
